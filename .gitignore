@@ -19,8 +19,6 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-*.json
-
 # Virtual Environment
 venv/
 ENV/
@@ -46,6 +44,7 @@ data/
 
 # Project specific
 .garmin_bot/
+.garminconnect/
 *.log
 
 # OS

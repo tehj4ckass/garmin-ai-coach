@@ -1,0 +1,32 @@
+{
+  "gemini-3-flash": {
+    "input_cost": 0.075,
+    "output_cost": 0.30,
+    "web_search_cost": 0.0
+  },
+  "gemini-3.1-pro": {
+    "input_cost": 1.25,
+    "output_cost": 5.00,
+    "web_search_cost": 0.0
+  },
+  "claude-3-5-sonnet": {
+    "input_cost": 3.0,
+    "output_cost": 15.0,
+    "web_search_cost": 0.0
+  },
+  "claude-3-5-haiku": {
+    "input_cost": 0.8,
+    "output_cost": 4.0,
+    "web_search_cost": 0.0
+  },
+  "gpt-4o": {
+    "input_cost": 2.5,
+    "output_cost": 10.0,
+    "web_search_cost": 0.0
+  },
+  "gpt-4o-mini": {
+    "input_cost": 0.15,
+    "output_cost": 0.60,
+    "web_search_cost": 0.0
+  }
+}

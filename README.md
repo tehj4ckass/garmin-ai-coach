@@ -165,7 +165,7 @@ Set at least one provider API key (e.g. in `.env`):
 - `OPENAI_API_KEY`
 - `ANTHROPIC_API_KEY`
 - `OPENROUTER_API_KEY` (DeepSeek/Gemini/Grok, and can also act as a fallback router)
-- `GOOGLE_API_KEY` (Necessary for the new integration of Gemini models)
+- `GOOGLE_API_KEY` (Necessary for the direct utilization of Gemini models via google api)
 
 The run’s `ai_mode` comes from `extraction.ai_mode` (the CLI exports it to `AI_MODE` internally).
 
