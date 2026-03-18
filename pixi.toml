@@ -1,0 +1,66 @@
+[project]
+name = "garmin-ai-coach"
+version = "2.2.0"
+description = "CLI tool for Garmin data analysis with AI-powered insights"
+authors = ["Leon Zajchowski <l.zajchowski@web.de>"]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+
+[dependencies]
+python = ">=3.13.0,<3.14"
+pip = ">=25.2,<26"
+pre-commit = ">=4.3.0,<5"
+
+[pypi-dependencies]
+# Install the project itself in editable mode
+garmin-ai-coach = { path = ".", editable = true }
+garminconnect = ">=0.2.30, <0.3"
+anthropic = ">=0.71.0, <0.72"
+pydantic = ">=2.12, <3"
+pydantic-settings = ">=2.0, <3"
+langchain = ">=1.0.0, <2"
+langchain-openai = ">=1.0.0, <2"
+langchain-anthropic = ">=1.0.0, <2"
+langchain-community = ">=0.4, <0.5"
+langchain-core = ">=1.0.0, <2"
+langgraph = ">=1.0.0, <2"
+langsmith = ">=0.4.37, <0.5"
+numpy = ">=2.3.4, <3"
+pandas = ">=2.3.3, <3"
+plotly = ">=6.3.1, <7"
+python-dotenv = ">=1.1.1, <2"
+setuptools = "*"
+pytest = ">=8.4.2, <9"
+pytest-cov = ">=7.0.0, <8"
+pytest-asyncio = ">=1.2.0, <2"
+black = ">=25.9.0, <26"
+isort = ">=7.0.0, <8"
+flake8 = ">=7.3.0, <8"
+mypy = ">=1.18.2, <2"
+ruff = ">=0.14.1, <0.15"
+vulture = ">=2.14, <3"
+types-PyYAML = "*"
+types-requests = "*"
+
+[tasks]
+# Development tasks
+dev = "python cli/garmin_ai_coach_cli.py --help"
+test = "pytest"
+test-cov = "pytest --cov=. --cov-report=term-missing --cov-report=html"
+lint = "flake8 ."
+lint-ruff = "ruff check ."
+ruff-fix = "ruff check --fix ."
+format = "black . && isort ."
+type-check = "mypy ."
+
+# Dead code detection
+dead-code = "vulture --config vulture.toml"
+dead-code-all = "vulture --config vulture.toml --min-confidence 60"
+dead-code-verbose = "vulture --config vulture.toml --verbose"
+
+# CLI coach interface
+coach-cli = "python cli/garmin_ai_coach_cli.py"
+coach-init = "python cli/garmin_ai_coach_cli.py --init-config"
+
+[environments]
+default = { solve-group = "default" }
