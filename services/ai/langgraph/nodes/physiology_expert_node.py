@@ -140,7 +140,7 @@ async def physiology_expert_node(state: TrainingAnalysisState) -> dict[str, list
 
     async def node_execution():
         agent_output, usage = await retry_with_backoff(
-            call_physiology_with_tools, AI_ANALYSIS_CONFIG, "Physiology Agent with Tools"
+            call_physiology_analysis, AI_ANALYSIS_CONFIG, "Physiology Agent with Tools"
         )
 
         execution_time = (datetime.now() - agent_start_time).total_seconds()

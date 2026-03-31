@@ -53,7 +53,16 @@ def _render_receiver_payload(payload: Any) -> str:
 
 def extract_expert_output(expert_output: Any, target_field: str) -> str:
     if expert_output is None:
-        raise ValueError(f"Expert output is None. Cannot extract '{target_field}'.")
+        # Upstream expert node failed (e.g., API overload). Return a safe placeholder so downstream
+        # nodes (synthesis/season/weekly planners) can still run and report partial results.
+        return _render_receiver_payload(
+            {
+                "signals": [],
+                "evidence": [],
+                "implications": [],
+                "uncertainty": f"Expert output missing (upstream failure). Cannot extract '{target_field}'.",
+            }
+        )
 
     output_container: Any = _MISSING
     if hasattr(expert_output, "output"):
@@ -69,7 +78,15 @@ def extract_expert_output(expert_output: Any, target_field: str) -> str:
         if payload is not _MISSING:
             return _render_receiver_payload(payload)
 
-    raise ValueError(f"Expert output missing '{target_field}' field. Type: {type(expert_output)}")
+    # If the expert output exists but doesn't contain the expected receiver field, keep the workflow running.
+    return _render_receiver_payload(
+        {
+            "signals": [],
+            "evidence": [],
+            "implications": [],
+            "uncertainty": f"Expert output present but missing '{target_field}' field. Type: {type(expert_output)}",
+        }
+    )
 
 
 def extract_agent_content(value: Any) -> str:

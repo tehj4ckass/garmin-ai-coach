@@ -4,7 +4,7 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
-from services.ai.ai_settings import AgentRole
+from services.ai.ai_settings import AgentRole, ai_settings
 from services.ai.langgraph.state.training_analysis_state import TrainingAnalysisState
 from services.ai.model_config import ModelSelector
 from services.ai.utils.retry_handler import AI_ANALYSIS_CONFIG, retry_with_backoff

@@ -6,6 +6,7 @@ import getpass
 import json
 import logging
 import os
+import re
 import sys
 from dataclasses import asdict
 from datetime import datetime, timedelta
@@ -180,6 +181,18 @@ def _save_plan_outputs(output_dir: Path, result: dict[str, Any]) -> list[str]:
     return files_generated
 
 
+def _safe_folder_component(value: str) -> str:
+    """
+    Make a string safe for use as a single folder name component on Windows/macOS/Linux.
+    Keeps only [A-Za-z0-9_-] and normalizes separators.
+    """
+    value = value.strip().lower()
+    value = value.replace("@", "_").replace(".", "_")
+    value = re.sub(r"[^a-z0-9_-]+", "_", value)
+    value = re.sub(r"_+", "_", value).strip("_")
+    return value or "unknown"
+
+
 async def run_analysis_from_config(config_path: Path) -> None:
     config_parser = ConfigParser(config_path)
     athlete_name, email = config_parser.get_athlete_info()
@@ -191,10 +204,10 @@ async def run_analysis_from_config(config_path: Path) -> None:
     if outside_competitions:
         competitions.extend(outside_competitions)
 
-    output_dir = config_parser.get_output_directory()
+    base_output_dir = config_parser.get_output_directory()
 
     logger.info("Starte Analyse für %s", athlete_name)
-    logger.info("Ausgabeverzeichnis: %s", output_dir)
+    logger.info("Ausgabeverzeichnis (Basis): %s", base_output_dir)
 
     password = config_parser.get_password()
 
@@ -207,6 +220,15 @@ async def run_analysis_from_config(config_path: Path) -> None:
     representative_model = ai_settings.get_model_for_role(AgentRole.SUMMARIZER)
     logger.info("AI-Modus: %s (%s)", os.environ["AI_MODE"], representative_model)
 
+    now = datetime.now()
+    run_folder = (
+        f"{_safe_folder_component(email)}__"
+        f"{_safe_folder_component(os.environ['AI_MODE'])}__"
+        f"{now.strftime('%Y-%m-%d')}__"
+        f"{now.strftime('%H-%M-%S')}"
+    )
+    output_dir = base_output_dir / run_folder
+    logger.info("Ausgabeverzeichnis (Run): %s", output_dir)
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -224,7 +246,6 @@ async def run_analysis_from_config(config_path: Path) -> None:
         garmin_data = extractor.extract_data(extraction_config)
         logger.info("Datenextraktion abgeschlossen")
 
-        now = datetime.now()
         plotting_enabled = extraction_settings.get("enable_plotting", False)
         hitl_enabled = extraction_settings.get("hitl_enabled", True)
         skip_synthesis = extraction_settings.get("skip_synthesis", False)
@@ -263,15 +284,27 @@ async def run_analysis_from_config(config_path: Path) -> None:
         files_generated.extend(_save_expert_outputs(output_dir, result))
         files_generated.extend(_save_plan_outputs(output_dir, result))
 
-        cost_total = float(
-            result.get("cost_summary", {}).get("total_cost_usd", 0.0) or
-            result.get("execution_metadata", {}).get("total_cost_usd", 0.0) or
-            sum(cost.get("total_cost", 0) for cost in result.get("costs", []))
-        )
-        total_tokens = int(
-            result.get("cost_summary", {}).get("total_tokens", 0) or
-            result.get("execution_metadata", {}).get("total_tokens", 0)
-        )
+        # Cost reporting: avoid printing misleading "$0.00" when no cost basis is available
+        cost_total: float | None = None
+        total_tokens: int | None = None
+
+        if isinstance(result.get("cost_summary"), dict) and result["cost_summary"].get("total_cost_usd"):
+            cost_total = float(result["cost_summary"]["total_cost_usd"])
+            total_tokens = int(result["cost_summary"].get("total_tokens") or 0)
+        elif isinstance(result.get("execution_metadata"), dict) and result["execution_metadata"].get("total_cost_usd"):
+            cost_total = float(result["execution_metadata"]["total_cost_usd"])
+            total_tokens = int(result["execution_metadata"].get("total_tokens") or 0)
+        else:
+            # Fallback: if we only have local per-agent costs without pricing/usage metadata,
+            # we can still report tokens if available, but cost remains "not calculable".
+            usage_metadata = result.get("usage_metadata") or {}
+            if isinstance(usage_metadata, dict) and usage_metadata:
+                # If local cost calculation ran, cost_summary should exist. If not, tokens are still useful.
+                token_sum = 0
+                for usage in usage_metadata.values():
+                    if isinstance(usage, dict):
+                        token_sum += int(usage.get("total_tokens") or (usage.get("input_tokens", 0) + usage.get("output_tokens", 0)))
+                total_tokens = token_sum if token_sum > 0 else None
 
         (output_dir / "summary.json").write_text(
             json.dumps({
@@ -280,6 +313,7 @@ async def run_analysis_from_config(config_path: Path) -> None:
                 "competitions": competitions,
                 "total_cost_usd": cost_total,
                 "total_tokens": total_tokens,
+                "cost_calculable": cost_total is not None,
                 "execution_id": result.get("execution_id", ""),
                 "trace_id": result.get("execution_metadata", {}).get("trace_id", ""),
                 "root_run_id": result.get("execution_metadata", {}).get("root_run_id", ""),
@@ -292,7 +326,11 @@ async def run_analysis_from_config(config_path: Path) -> None:
         if outside_competitions:
             logger.info("✅  %d Outside-Wettkämpfe aus der Konfiguration hinzugefügt", len(outside_competitions))
         logger.info("📁 Ergebnisse gespeichert in: %s", output_dir)
-        logger.info("💰 Gesamtkosten: $%.2f (%d Tokens)", cost_total, total_tokens)
+        if cost_total is None:
+            token_info = f" ({total_tokens} Tokens)" if isinstance(total_tokens, int) else ""
+            logger.info("💰 Gesamtkosten: nicht berechenbar%s", token_info)
+        else:
+            logger.info("💰 Gesamtkosten: $%.2f (%d Tokens)", cost_total, int(total_tokens or 0))
     except Exception as e:
         logger.error("❌ Analyse fehlgeschlagen: %s", e)
         raise
