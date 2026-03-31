@@ -32,8 +32,22 @@ pixi run coach-cli --config my_training_config.yaml
 
 Open the generated reports:
 
-- `./data/analysis.html`
-- `./data/planning.html`
+- `./data/<run-folder>/analysis.html`
+- `./data/<run-folder>/planning.html`
+
+---
+
+## 🔀 Fork Notes (What’s different here?)
+
+This fork includes a few pragmatic changes to make expensive runs safer and easier to manage:
+
+- **Per-run output folders (no overwrite)**: each CLI run writes into a new subfolder under `output.directory`:
+  - `<email>__<ai_mode>__<YYYY-MM-DD>__<HH-MM-SS>/`
+  - Example: `data/patrick_letz_gmail_com__development__2026-03-31__17-32-39/`
+- **Less misleading cost output**: if costs cannot be computed (e.g. no trace-based cost data), the CLI prints **“not calculable”** instead of `$0.00`, and `summary.json` uses `null` for `total_cost_usd` plus a `cost_calculable` flag.
+- **Resilience fixes**: workflow no longer hard-crashes on missing expert outputs; downstream nodes receive a clear placeholder section describing the missing input.
+
+If you’re comparing to upstream docs or screenshots, prefer this README + `cli/README.md` for current behavior.
 
 ---
 
@@ -150,11 +164,17 @@ credentials:
 
 Generated files in `output.directory` (default: `./data`):
 
+Each run writes into a **new subfolder** under `output.directory`:
+
+- `<email>__<ai_mode>__<YYYY-MM-DD>__<HH-MM-SS>/`
+
+Inside that run folder:
+
 - `analysis.html` — training analysis report
 - `planning.html` — season overview + compact 4-week plan
 - `metrics_expert.json`, `activity_expert.json`, `physiology_expert.json` — structured expert outputs
 - `season_plan.md`, `weekly_plan.md` — intermediate planning artifacts
-- `summary.json` — metadata + cost summary (`trace_id` / `root_run_id` when LangSmith is enabled)
+- `summary.json` — metadata (and cost summary when available; includes `cost_calculable`)
 
 ---
 
@@ -165,7 +185,7 @@ Set at least one provider API key (e.g. in `.env`):
 - `OPENAI_API_KEY`
 - `ANTHROPIC_API_KEY`
 - `OPENROUTER_API_KEY` (DeepSeek/Gemini/Grok, and can also act as a fallback router)
-- `GOOGLE_API_KEY` (Necessary for the direct utilization of Gemini models via google api)
+- `GOOGLE_API_KEY` (for direct Gemini usage via Google’s API)
 
 The run’s `ai_mode` comes from `extraction.ai_mode` (the CLI exports it to `AI_MODE` internally).
 
