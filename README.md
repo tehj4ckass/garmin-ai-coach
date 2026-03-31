@@ -43,7 +43,7 @@ This fork includes a few pragmatic changes to make expensive runs safer and easi
 
 - **Per-run output folders (no overwrite)**: each CLI run writes into a new subfolder under `output.directory`:
   - `<email>__<ai_mode>__<YYYY-MM-DD>__<HH-MM-SS>/`
-  - Example: `data/patrick_letz_gmail_com__development__2026-03-31__17-32-39/`
+  - Example: `data/you_example_com__development__2026-03-31__17-32-39/`
 - **German output**: prompts and generated reports are geared towards **German** output by default (upstream may differ).
 - **Less misleading cost output**: if costs cannot be computed (e.g. no trace-based cost data), the CLI prints **“not calculable”** instead of `$0.00`, and `summary.json` uses `null` for `total_cost_usd` plus a `cost_calculable` flag.
 - **Resilience fixes**: workflow no longer hard-crashes on missing expert outputs; downstream nodes receive a clear placeholder section describing the missing input.
