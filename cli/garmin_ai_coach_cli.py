@@ -27,9 +27,32 @@ from services.outside.client import OutsideApiGraphQlClient
 sys.path.append(str(Path(__file__).parent.parent))
 
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
+_LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+
+def _parse_log_level(name: str) -> int:
+    mapping = logging.getLevelNamesMapping()
+    level = mapping.get(name.strip().upper())
+    if level is not None:
+        return level
+    logging.getLogger(__name__).warning("Unbekanntes log level '%s', verwende INFO", name)
+    return logging.INFO
+
+
+def _apply_cli_logging(config_parser: "ConfigParser") -> None:
+    """Root-Logger für coach-cli: logging.level aus YAML, sonst LOG_LEVEL aus .env, sonst INFO."""
+    raw = config_parser.get_log_level_name()
+    if not raw:
+        raw = (os.environ.get("LOG_LEVEL") or "").strip()
+    if not raw:
+        level = logging.INFO
+    else:
+        level = _parse_log_level(raw)
+    logging.basicConfig(format=_LOG_FORMAT, level=level, force=True)
+    logging.getLogger(__name__).debug("CLI-Log-Level: %s", logging.getLevelName(level))
+
+
+logging.basicConfig(format=_LOG_FORMAT, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -53,10 +76,15 @@ class ConfigParser:
             raise ValueError(f"Unsupported config format: {self.config_path.suffix}")
 
     def get_athlete_info(self) -> tuple[str, str]:
-        if not (email := self.config.get("athlete", {}).get("email")):
-            raise ValueError("Athlete email is required in config file")
-
-        return self.config.get("athlete", {}).get("name", "Athlete"), email
+        name = self.config.get("athlete", {}).get("name", "Athlete")
+        email = (os.environ.get("GARMIN_EMAIL") or "").strip()
+        if not email:
+            email = (self.config.get("athlete", {}).get("email") or "").strip()
+        if not email:
+            raise ValueError(
+                "Garmin-E-Mail fehlt: GARMIN_EMAIL in der .env setzen oder athlete.email in der Config."
+            )
+        return name, email
 
     def get_contexts(self) -> tuple[str, str]:
         return (
@@ -69,6 +97,7 @@ class ConfigParser:
             "activities_days": self.config.get("extraction", {}).get("activities_days", 7),
             "metrics_days": self.config.get("extraction", {}).get("metrics_days", 14),
             "ai_mode": self.config.get("extraction", {}).get("ai_mode", "development"),
+            "run_type": self.config.get("extraction", {}).get("run_type", "full"),
             "enable_plotting": self.config.get("extraction", {}).get("enable_plotting", False),
             "hitl_enabled": self.config.get("extraction", {}).get("hitl_enabled", True),
             "skip_synthesis": self.config.get("extraction", {}).get("skip_synthesis", False),
@@ -90,11 +119,24 @@ class ConfigParser:
     def get_output_directory(self) -> Path:
         return Path(self.config.get("output", {}).get("directory", "./data"))
 
+    def get_log_level_name(self) -> str | None:
+        raw = self.config.get("logging", {}).get("level")
+        if raw is None:
+            return None
+        text = str(raw).strip()
+        return text or None
+
     def get_password(self) -> str:
-        return (
-            self.config.get("credentials", {}).get("password", "") or
-            getpass.getpass("Enter Garmin Connect password: ")
-        )
+        env_pw = (os.environ.get("GARMIN_PASSWORD") or "").strip()
+        if env_pw:
+            return env_pw
+        yaml_pw = (self.config.get("credentials", {}).get("password") or "").strip()
+        if yaml_pw:
+            logger.debug(
+                "Garmin-Passwort aus der Config-Datei; für getrennte Geheimnisse GARMIN_PASSWORD in .env bevorzugen."
+            )
+            return yaml_pw
+        return getpass.getpass("Enter Garmin Connect password: ")
 
 
 def fetch_outside_competitions_from_config(config: dict[str, Any]) -> list[dict[str, Any]]:
@@ -195,9 +237,18 @@ def _safe_folder_component(value: str) -> str:
 
 async def run_analysis_from_config(config_path: Path) -> None:
     config_parser = ConfigParser(config_path)
+    _apply_cli_logging(config_parser)
     athlete_name, email = config_parser.get_athlete_info()
     analysis_context, planning_context = config_parser.get_contexts()
     extraction_settings = config_parser.get_extraction_config()
+    _run_type_raw = str(extraction_settings.get("run_type", "full")).lower()
+    if _run_type_raw not in ("full", "light"):
+        logger.warning(
+            "Ungültiger extraction.run_type '%s', verwende 'full'",
+            extraction_settings.get("run_type"),
+        )
+        _run_type_raw = "full"
+    extraction_settings["run_type"] = _run_type_raw
 
     competitions = config_parser.get_competitions()
     outside_competitions = fetch_outside_competitions_from_config(config_parser.config)
@@ -211,19 +262,23 @@ async def run_analysis_from_config(config_path: Path) -> None:
 
     password = config_parser.get_password()
 
-    os.environ["AI_MODE"] = extraction_settings.get("ai_mode", "development")
+    _ai_raw = str(extraction_settings.get("ai_mode", "development")).strip().lower()
+    os.environ["AI_MODE"] = "gemini_pro" if _ai_raw == "pro" else _ai_raw
+    os.environ["RUN_TYPE"] = extraction_settings["run_type"]
 
-    # Reload config and settings to pick up the new AI_MODE
+    # Reload config and settings to pick up the new AI_MODE / RUN_TYPE
     reload_config()
     ai_settings.reload()
 
     representative_model = ai_settings.get_model_for_role(AgentRole.SUMMARIZER)
     logger.info("AI-Modus: %s (%s)", os.environ["AI_MODE"], representative_model)
+    logger.info("Run-Typ: %s (full = Analyse+Planung, light = nur Analyse/analysis.html)", os.environ["RUN_TYPE"])
 
     now = datetime.now()
     run_folder = (
         f"{_safe_folder_component(email)}__"
         f"{_safe_folder_component(os.environ['AI_MODE'])}__"
+        f"{_safe_folder_component(os.environ['RUN_TYPE'])}__"
         f"{now.strftime('%Y-%m-%d')}__"
         f"{now.strftime('%H-%M-%S')}"
     )
@@ -249,6 +304,7 @@ async def run_analysis_from_config(config_path: Path) -> None:
         plotting_enabled = extraction_settings.get("enable_plotting", False)
         hitl_enabled = extraction_settings.get("hitl_enabled", True)
         skip_synthesis = extraction_settings.get("skip_synthesis", False)
+        run_type = extraction_settings["run_type"]
 
         logger.info("Plotting aktiviert: %s", plotting_enabled)
         logger.info("HITL aktiviert: %s", hitl_enabled)
@@ -275,6 +331,7 @@ async def run_analysis_from_config(config_path: Path) -> None:
             plotting_enabled=plotting_enabled,
             hitl_enabled=hitl_enabled,
             skip_synthesis=skip_synthesis,
+            run_type=run_type,
         )
 
         logger.info("Speichere Ergebnisse...")
@@ -311,6 +368,7 @@ async def run_analysis_from_config(config_path: Path) -> None:
                 "athlete": athlete_name,
                 "analysis_date": datetime.now().isoformat(),
                 "competitions": competitions,
+                "run_type": run_type,
                 "total_cost_usd": cost_total,
                 "total_tokens": total_tokens,
                 "cost_calculable": cost_total is not None,

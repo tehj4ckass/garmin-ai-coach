@@ -38,18 +38,19 @@ Options:
 - --output-dir PATH    Override the output.directory specified in the config
 
 Notes:
-- If `credentials.password` is not provided in the config, you will be securely prompted at runtime.
-- The CLI sets AI_MODE from `extraction.ai_mode` automatically for downstream components.
+- **Garmin login:** Prefer `GARMIN_EMAIL` and `GARMIN_PASSWORD` in `.env` (same idea as API keys). If unset, the CLI uses `athlete.email` and optional `credentials.password` from the YAML, then prompts for password when still empty.
+- `AI_MODE` / `RUN_TYPE` in der `.env` sind für **coach-cli** nicht nötig: `extraction.ai_mode` und `extraction.run_type` in der YAML sind maßgeblich (die CLI schreibt sie vor `reload_config()` in die Umgebung). In der `.env` nur setzen, wenn du **ohne** YAML andere Defaults brauchst (z. B. Skripte, Tests).
 
 ## Configuration
 
 Top-level keys:
-- athlete: name, email
+- athlete: name, email (email optional if `GARMIN_EMAIL` is set in `.env`)
+- logging: level (`DEBUG` | `INFO` | `WARNING` | `ERROR`) — steuert den Root-Logger des coach-cli; ohne Eintrag optional `LOG_LEVEL` in `.env`, sonst `INFO`
 - context: analysis, planning (freeform text; the AI will follow these constraints)
-- extraction: activities_days, metrics_days, ai_mode ("development" | "standard" | "cost_effective" | "pro")
+- extraction: activities_days, metrics_days, ai_mode (`development` < `cost_effective` < `standard` < `gemini_pro` < `openai`; Legacy `pro` = `gemini_pro`)
 - competitions: list of {name, date (YYYY-MM-DD), race_type, priority (A/B/C), target_time (HH:MM:SS)}
 - output: directory
-- credentials: password (optional; leave empty for interactive prompt)
+- credentials: password (optional fallback only; prefer `GARMIN_PASSWORD` in `.env`)
 
 Minimal example:
 ```yaml
@@ -75,8 +76,11 @@ competitions:
 output:
   directory: "./data"
 
+logging:
+  level: INFO
+
 credentials:
-  password: ""   # leave empty to be prompted
+  password: ""   # optional; prefer GARMIN_PASSWORD in .env
 ```
 
 Advanced example (derived from real usage):
@@ -146,7 +150,7 @@ Validation tips:
 
 Each run writes into a **new subfolder** under `output.directory` (default: `./data`) to avoid overwriting expensive results:
 
-- `<email>__<ai_mode>__<YYYY-MM-DD>__<HH-MM-SS>/`
+- `<email>__<ai_mode>__<run_type>__<YYYY-MM-DD>__<HH-MM-SS>/`
 
 Inside that run folder:
 
@@ -171,18 +175,19 @@ Set at least one provider API key in your environment (e.g., `.env`):
 
 The CLI will set `AI_MODE` from your config’s `extraction.ai_mode` (see [`python.run_analysis_from_config()`](../cli/garmin_ai_coach_cli.py:110) where `AI_MODE` is exported at [`os.environ['AI_MODE'] = ai_mode`](../cli/garmin_ai_coach_cli.py:125)).
 
-Provider selection depends on AI mode mapping:
-- Default mapping in [`services/ai/ai_settings.py`](../services/ai/ai_settings.py):
-  - `standard` → `gemini-3-flash` (Google direct, requires `GOOGLE_API_KEY`)
-  - `pro` → `gemini-3.1-pro` (Google direct, requires `GOOGLE_API_KEY`)
-  - `development` → `claude-4` (Anthropic direct, requires `ANTHROPIC_API_KEY`)
-  - `cost_effective` → `claude-3-haiku` (Anthropic direct, requires `ANTHROPIC_API_KEY`)
+Provider selection depends on AI mode mapping (cheap/fast → stronger; see [`services/ai/ai_settings.py`](../services/ai/ai_settings.py)):
+  - `development` → `gemini-3-flash` (`GOOGLE_API_KEY`)
+  - `cost_effective` → `claude-3-haiku` (`ANTHROPIC_API_KEY`)
+  - `standard` → `claude-4` (`ANTHROPIC_API_KEY`)
+  - `gemini_pro` → `gemini-3.1-pro` (`GOOGLE_API_KEY`); legacy YAML value `pro` is normalized to this
+  - `openai` → `gpt-4o` (`OPENAI_API_KEY`)
 
 Fallback routing: if a direct provider key is missing, the app may route supported models through OpenRouter (requires `OPENROUTER_API_KEY`). See [`services/ai/model_config.py`](../services/ai/model_config.py).
 
 Model IDs and providers are declared in [`python.ModelSelector.CONFIGURATIONS`](../services/ai/model_config.py:22), and the provider API key is auto-selected in [`python.ModelSelector.get_llm()`](../services/ai/model_config.py:61).
 
 Practical guidance:
-- If you want to use **direct Gemini**, set `GOOGLE_API_KEY` and use `ai_mode: "standard"` or `"pro"`.
-- If you want to use **direct Anthropic**, set `ANTHROPIC_API_KEY` and use `ai_mode: "development"` or `"cost_effective"`.
+- **Gemini (Flash or Pro):** `GOOGLE_API_KEY` — `development` (Flash) or `gemini_pro` (Pro tier).
+- **Anthropic:** `ANTHROPIC_API_KEY` — `cost_effective` (Haiku) or `standard` (Claude 4).
+- **OpenAI:** `OPENAI_API_KEY` — `openai` (`gpt-4o`).
 - If you want to route via **OpenRouter**, set `OPENROUTER_API_KEY` (this can also act as a fallback router when direct keys are missing for supported models).

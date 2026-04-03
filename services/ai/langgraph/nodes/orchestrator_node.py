@@ -82,12 +82,23 @@ class MasterOrchestrator:
 
         if not all_questions:
             if stage == "analysis":
+                run_type = state.get("run_type") or "full"
+                is_light = run_type == "light"
                 if state.get("skip_synthesis", False):
+                    if is_light:
+                        logger.warning(
+                            "skip_synthesis=True wird bei run_type=light ignoriert "
+                            "(Synthese ist für analysis.html erforderlich)."
+                        )
+                        logger.info("MasterOrchestrator: Light-Run, nur Synthese (kein Planning-Zweig)")
+                        return Command(goto=["synthesis"])
                     logger.info("MasterOrchestrator: skip_synthesis=True, proceeding directly to season_planner")
                     return Command(goto="season_planner", update={"synthesis_complete": True})
-                else:
-                    logger.info("MasterOrchestrator: No questions found, proceeding to synthesis and season_planner")
-                    return Command(goto=["synthesis", "season_planner"])
+                if is_light:
+                    logger.info("MasterOrchestrator: Light-Run, nur Synthese (kein Planning-Zweig)")
+                    return Command(goto=["synthesis"])
+                logger.info("MasterOrchestrator: No questions found, proceeding to synthesis and season_planner")
+                return Command(goto=["synthesis", "season_planner"])
             else:
                 logger.info(
                     "MasterOrchestrator: No questions found, proceeding to %s",

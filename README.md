@@ -42,8 +42,8 @@ Open the generated reports:
 This fork includes a few pragmatic changes to make expensive runs safer and easier to manage:
 
 - **Per-run output folders (no overwrite)**: each CLI run writes into a new subfolder under `output.directory`:
-  - `<email>__<ai_mode>__<YYYY-MM-DD>__<HH-MM-SS>/`
-  - Example: `data/you_example_com__development__2026-03-31__17-32-39/`
+  - `<email>__<ai_mode>__<run_type>__<YYYY-MM-DD>__<HH-MM-SS>/`
+  - Example: `data/you_example_com__development__full__2026-03-31__17-32-39/`
 - **German output**: prompts and generated reports are geared towards **German** output by default (upstream may differ).
 - **Less misleading cost output**: if costs cannot be computed (e.g. no trace-based cost data), the CLI prints **“not calculable”** instead of `$0.00`, and `summary.json` uses `null` for `total_cost_usd` plus a `cost_calculable` flag.
 - **Resilience fixes**: workflow no longer hard-crashes on missing expert outputs; downstream nodes receive a clear placeholder section describing the missing input.
@@ -133,7 +133,7 @@ context:
 extraction:
   activities_days: 21
   metrics_days: 56
-  ai_mode: "standard"          # development | standard | cost_effective | pro
+  ai_mode: "standard"  # development → openai (günstig→stärker), siehe coach_config.yaml
   enable_plotting: false
   hitl_enabled: true
   skip_synthesis: false
@@ -154,7 +154,10 @@ outside:
 output:
   directory: "./data"
 
-# Optional: keep empty to be prompted securely at runtime
+logging:
+  level: INFO
+
+# Optional YAML-Fallback — bevorzugt GARMIN_EMAIL / GARMIN_PASSWORD in .env (siehe cli/README.md)
 credentials:
   password: ""
 ```
@@ -167,7 +170,7 @@ Generated files in `output.directory` (default: `./data`):
 
 Each run writes into a **new subfolder** under `output.directory`:
 
-- `<email>__<ai_mode>__<YYYY-MM-DD>__<HH-MM-SS>/`
+- `<email>__<ai_mode>__<run_type>__<YYYY-MM-DD>__<HH-MM-SS>/`
 
 Inside that run folder:
 
@@ -188,7 +191,7 @@ Set at least one provider API key (e.g. in `.env`):
 - `OPENROUTER_API_KEY` (DeepSeek/Gemini/Grok, and can also act as a fallback router)
 - `GOOGLE_API_KEY` (for direct Gemini usage via Google’s API)
 
-The run’s `ai_mode` comes from `extraction.ai_mode` (the CLI exports it to `AI_MODE` internally).
+The run’s `ai_mode` comes from `extraction.ai_mode` (the CLI sets `AI_MODE` internally before loading config). You don’t need `AI_MODE` in `.env` for coach-cli; use it only for non-CLI entry points, where it defaults to `standard` if unset.
 
 Defaults (role→model mapping) live in:
 

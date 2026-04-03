@@ -20,6 +20,8 @@ from services.ai.langgraph.nodes.plot_resolution_node import plot_resolution_nod
 from services.ai.langgraph.nodes.season_planner_node import season_planner_node
 from services.ai.langgraph.nodes.synthesis_node import synthesis_node
 from services.ai.langgraph.nodes.weekly_planner_node import weekly_planner_node
+from core.config import get_config
+
 from services.ai.langgraph.state.training_analysis_state import TrainingAnalysisState, create_initial_state
 from services.ai.langgraph.utils.workflow_cost_tracker import ProgressIntegratedCostTracker
 
@@ -177,10 +179,14 @@ async def run_complete_analysis_and_planning(
     plotting_enabled: bool = False,
     hitl_enabled: bool = True,
     skip_synthesis: bool = False,
+    run_type: str | None = None,
 ) -> dict:
     execution_id = f"{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_complete"
     cost_tracker = ProgressIntegratedCostTracker(f"garmin_ai_coach_{user_id}", progress_manager)
 
+    resolved_run_type = (
+        run_type if run_type is not None else get_config().run_type.value
+    )
 
     final_state, execution = await cost_tracker.run_workflow_with_progress(
         create_integrated_analysis_and_planning_workflow(),
@@ -197,6 +203,7 @@ async def run_complete_analysis_and_planning(
             plotting_enabled=plotting_enabled,
             hitl_enabled=hitl_enabled,
             skip_synthesis=skip_synthesis,
+            run_type=resolved_run_type,
         )),
         execution_id,
         user_id,
