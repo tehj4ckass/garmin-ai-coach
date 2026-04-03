@@ -1,9 +1,11 @@
 # Garmin AI Coach CLI (primary interface)
 
-Command-line interface for the AI triathlon coach. Uses a YAML or JSON config file to extract your Garmin data, run multi-agent AI analysis and planning, and save HTML reports.
+Command-line interface for the AI endurance coach: YAML/JSON config, Garmin extraction, LangGraph multi-agent analysis, and HTML reports.
 
-- CLI script: [cli/garmin_ai_coach_cli.py](cli/garmin_ai_coach_cli.py)
-- Config template: [cli/coach_config_template.yaml](cli/coach_config_template.yaml)
+**This fork:** agent prompts and **report text default to German** (see [About this fork](../README.md#about-this-fork) in the root README). It also adds tiered **`extraction.ai_mode`** (Google / Anthropic / OpenAI) and **`extraction.run_type`** (`full` = analysis + planning, `light` = `analysis.html` only).
+
+- CLI script: [garmin_ai_coach_cli.py](garmin_ai_coach_cli.py)
+- Config: `pixi run coach-init my_config.yaml` or start from [coach_config.yaml](../coach_config.yaml) / [cli/coach_config.yaml](coach_config.yaml)
 - Pixi tasks: [pixi.toml](../pixi.toml)
 
 ## Quick Start
@@ -39,15 +41,15 @@ Options:
 
 Notes:
 - **Garmin login:** Prefer `GARMIN_EMAIL` and `GARMIN_PASSWORD` in `.env` (same idea as API keys). If unset, the CLI uses `athlete.email` and optional `credentials.password` from the YAML, then prompts for password when still empty.
-- `AI_MODE` / `RUN_TYPE` in der `.env` sind für **coach-cli** nicht nötig: `extraction.ai_mode` und `extraction.run_type` in der YAML sind maßgeblich (die CLI schreibt sie vor `reload_config()` in die Umgebung). In der `.env` nur setzen, wenn du **ohne** YAML andere Defaults brauchst (z. B. Skripte, Tests).
+- **`AI_MODE` / `RUN_TYPE` in `.env`:** not required for coach-cli — `extraction.ai_mode` and `extraction.run_type` in YAML win (the CLI exports them before `reload_config()`). Set env vars only for non-CLI entrypoints (e.g. tests, scripts).
 
 ## Configuration
 
 Top-level keys:
 - athlete: name, email (email optional if `GARMIN_EMAIL` is set in `.env`)
-- logging: level (`DEBUG` | `INFO` | `WARNING` | `ERROR`) — steuert den Root-Logger des coach-cli; ohne Eintrag optional `LOG_LEVEL` in `.env`, sonst `INFO`
+- logging: level (`DEBUG` | `INFO` | `WARNING` | `ERROR`) — root logger for coach-cli; if omitted, optional `LOG_LEVEL` in `.env`, else `INFO`
 - context: analysis, planning (freeform text; the AI will follow these constraints)
-- extraction: activities_days, metrics_days, ai_mode (`development` < `cost_effective` < `standard` < `gemini_pro` < `openai`; Legacy `pro` = `gemini_pro`)
+- extraction: activities_days, metrics_days, ai_mode (`development` < `cost_effective` < `standard` < `gemini_pro` < `openai`; legacy `pro` → `gemini_pro`), run_type (`full` | `light` — `light` skips the whole planning branch; only `analysis.html`)
 - competitions: list of {name, date (YYYY-MM-DD), race_type, priority (A/B/C), target_time (HH:MM:SS)}
 - output: directory
 - credentials: password (optional fallback only; prefer `GARMIN_PASSWORD` in `.env`)
@@ -66,6 +68,7 @@ extraction:
   activities_days: 7
   metrics_days: 14
   ai_mode: "development"
+  run_type: "full"
 
 competitions:
   - name: "Target Race"
@@ -127,6 +130,7 @@ extraction:
   activities_days: 21
   metrics_days: 56
   ai_mode: "standard"
+  run_type: "full"
 
 competitions:
   - name: "Franklin Meilenlauf"
@@ -144,7 +148,7 @@ credentials:
 
 Validation tips:
 - Date format must be ISO `YYYY-MM-DD` for competitions.
-- `athlete.email` is required; the run will fail if missing.
+- Garmin email: either `athlete.email` in YAML or `GARMIN_EMAIL` in `.env` (see Notes above).
 
 ## Outputs
 
@@ -154,8 +158,8 @@ Each run writes into a **new subfolder** under `output.directory` (default: `./d
 
 Inside that run folder:
 
-- `analysis.html` — training analysis report
-- `planning.html` — season overview + compact 4-week plan
+- `analysis.html` — training analysis report (**German** copy in this fork)
+- `planning.html` — season overview + compact 4-week plan (**not** produced for `run_type: light` in most runs)
 - `metrics_expert.json`, `activity_expert.json`, `physiology_expert.json` — structured expert outputs
 - `season_plan.md`, `weekly_plan.md` — intermediate planning artifacts
 - `summary.json` — metadata and (when available) cost summary:

@@ -11,9 +11,23 @@
 [![Powered by LangGraph](https://img.shields.io/badge/Powered%20by-LangGraph-purple.svg)](https://langchain-ai.github.io/langgraph/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Providers:** OpenAI, Anthropic, and OpenRouter (DeepSeek/Gemini/Grok via OpenRouter).
+**Providers:** direct **Google (Gemini)**, **Anthropic**, **OpenAI**, plus **OpenRouter** (e.g. as a fallback router).
 
 > Not affiliated with Garmin. Not medical advice.
+
+---
+
+## About this fork
+
+This repo keeps the same **CLI-first, LangGraph multi-agent** design as upstream, with a few practical differences:
+
+| Focus | What’s different here |
+|--------|----------------------|
+| **Language (German)** | **System prompts, agent instructions, and the written reports** (`analysis.html`, `planning.html`, HITL console text in German) target **German** output. Upstream is largely English-oriented; your `context.*` fields in YAML can still be written in any language, but the **default coaching voice** is German. |
+| **Models** | Tiered **`extraction.ai_mode`** from cheap/fast to stronger/pricier: `development` (Gemini Flash) → `cost_effective` (Haiku) → `standard` (Claude 4) → `gemini_pro` → `openai` (`gpt-4o`). Each tier uses **direct provider APIs** where possible, with optional OpenRouter fallback — see [`services/ai/ai_settings.py`](services/ai/ai_settings.py). |
+| **`run_type`** | `full` = full pipeline (**analysis + planning**, `analysis.html` + `planning.html`). `light` = **analysis only** (`analysis.html`); the entire **planning branch** is skipped (faster/cheaper). Set `extraction.run_type` in YAML; the CLI exports `RUN_TYPE` the same way it does `AI_MODE`. |
+
+**Other tweaks vs. upstream:** **per-run output folders** (`<email>__<ai_mode>__<run_type>__<date>__<time>/`), **clearer cost reporting** (`total_cost_usd` may be `null` with `cost_calculable`), **more resilient graphs** when expert JSON is missing (placeholders instead of hard failure). Put secrets (**API keys, Garmin password**) in **`.env`**; run parameters in **`coach_config.yaml`** — see [`cli/README.md`](cli/README.md).
 
 ---
 
@@ -34,21 +48,6 @@ Open the generated reports:
 
 - `./data/<run-folder>/analysis.html`
 - `./data/<run-folder>/planning.html`
-
----
-
-## 🔀 Fork Notes (What’s different here?)
-
-This fork includes a few pragmatic changes to make expensive runs safer and easier to manage:
-
-- **Per-run output folders (no overwrite)**: each CLI run writes into a new subfolder under `output.directory`:
-  - `<email>__<ai_mode>__<run_type>__<YYYY-MM-DD>__<HH-MM-SS>/`
-  - Example: `data/you_example_com__development__full__2026-03-31__17-32-39/`
-- **German output**: prompts and generated reports are geared towards **German** output by default (upstream may differ).
-- **Less misleading cost output**: if costs cannot be computed (e.g. no trace-based cost data), the CLI prints **“not calculable”** instead of `$0.00`, and `summary.json` uses `null` for `total_cost_usd` plus a `cost_calculable` flag.
-- **Resilience fixes**: workflow no longer hard-crashes on missing expert outputs; downstream nodes receive a clear placeholder section describing the missing input.
-
-If you’re comparing to upstream docs or screenshots, prefer this README + `cli/README.md` for current behavior.
 
 ---
 
@@ -100,6 +99,7 @@ flowchart LR
     EXP --> ORCH["Master Orchestrator<br>(HITL optional)"]
     ORCH --> ANALYSIS["analysis.html"]
     ORCH --> SEASON["Season plan<br>(12–24 weeks)"]
+    %% run_type=light: nur Zweig zu ANALYSIS, SEASON/WEEK/PLANNING entfallen
     SEASON --> WEEK["4-week plan<br>(28 days)"]
     WEEK --> PLANNING["planning.html"]
 ```
@@ -117,7 +117,7 @@ Docs:
 Start from the template:
 
 - `pixi run coach-init my_training_config.yaml`
-- or copy [`cli/coach_config_template.yaml`](cli/coach_config_template.yaml)
+- or copy [`coach_config.yaml`](coach_config.yaml) / [`cli/coach_config.yaml`](cli/coach_config.yaml) as a starting point
 
 Minimal example:
 
@@ -133,7 +133,8 @@ context:
 extraction:
   activities_days: 21
   metrics_days: 56
-  ai_mode: "standard"  # development → openai (günstig→stärker), siehe coach_config.yaml
+  ai_mode: "standard"       # development … openai (see “About this fork” / coach_config.yaml)
+  run_type: "full"          # full | light — light = analysis.html only
   enable_plotting: false
   hitl_enabled: true
   skip_synthesis: false
@@ -157,7 +158,7 @@ output:
 logging:
   level: INFO
 
-# Optional YAML-Fallback — bevorzugt GARMIN_EMAIL / GARMIN_PASSWORD in .env (siehe cli/README.md)
+# Optional YAML fallback — prefer GARMIN_EMAIL / GARMIN_PASSWORD in .env (see cli/README.md)
 credentials:
   password: ""
 ```
@@ -178,7 +179,7 @@ Inside that run folder:
 - `planning.html` — season overview + compact 4-week plan
 - `metrics_expert.json`, `activity_expert.json`, `physiology_expert.json` — structured expert outputs
 - `season_plan.md`, `weekly_plan.md` — intermediate planning artifacts
-- `summary.json` — metadata (and cost summary when available; includes `cost_calculable`)
+- `summary.json` — metadata including `run_type`; cost fields when available; `cost_calculable`
 
 ---
 
@@ -191,7 +192,7 @@ Set at least one provider API key (e.g. in `.env`):
 - `OPENROUTER_API_KEY` (DeepSeek/Gemini/Grok, and can also act as a fallback router)
 - `GOOGLE_API_KEY` (for direct Gemini usage via Google’s API)
 
-The run’s `ai_mode` comes from `extraction.ai_mode` (the CLI sets `AI_MODE` internally before loading config). You don’t need `AI_MODE` in `.env` for coach-cli; use it only for non-CLI entry points, where it defaults to `standard` if unset.
+`ai_mode` and `run_type` are read from **`extraction.ai_mode`** and **`extraction.run_type`** in YAML (the coach-cli sets `AI_MODE` and `RUN_TYPE` before `reload_config()`). You don’t need those env vars in `.env` for normal CLI runs; use them only for non-CLI entrypoints (defaults: `standard` + `full`). **Legacy:** the value `pro` is treated as **`gemini_pro`**.
 
 Defaults (role→model mapping) live in:
 
