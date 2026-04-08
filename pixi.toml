@@ -1,5 +1,5 @@
 [project]
-name = "garmin-ai-coach"
+name = "garmin-ai-coach_gem"
 version = "2.2.0"
 description = "CLI tool for Garmin data analysis with AI-powered insights"
 authors = ["Leon Zajchowski <l.zajchowski@web.de>"]
@@ -21,6 +21,7 @@ pydantic-settings = ">=2.0, <3"
 langchain = ">=1.0.0, <2"
 langchain-openai = ">=1.0.0, <2"
 langchain-anthropic = ">=1.0.0, <2"
+langchain-google-genai = ">=2.0.0, <3"
 langchain-community = ">=0.4, <0.5"
 langchain-core = ">=1.0.0, <2"
 langgraph = ">=1.0.0, <2"
@@ -45,8 +46,8 @@ types-requests = "*"
 [tasks]
 # Development tasks
 dev = "python cli/garmin_ai_coach_cli.py --help"
-test = "pytest"
-test-cov = "pytest --cov=. --cov-report=term-missing --cov-report=html"
+test = "python -m pytest"
+test-cov = "python -m pytest --cov=. --cov-report=term-missing --cov-report=html"
 lint = "flake8 ."
 lint-ruff = "ruff check ."
 ruff-fix = "ruff check --fix ."

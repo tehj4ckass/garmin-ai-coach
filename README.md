@@ -217,6 +217,8 @@ Optional:
 <summary>Advanced: Installation without Pixi</summary>
 
 ```bash
+# Pixi is the recommended setup for this fork.
+# This pip-based path is provided for compatibility and may require manual troubleshooting.
 pip install -r requirements.txt
 python cli/garmin_ai_coach_cli.py --init-config my_training_config.yaml
 python cli/garmin_ai_coach_cli.py --config my_training_config.yaml

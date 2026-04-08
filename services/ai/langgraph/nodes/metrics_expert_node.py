@@ -167,9 +167,13 @@ async def metrics_expert_node(state: TrainingAnalysisState) -> dict[str, list | 
         )
 
     async def node_execution():
-        agent_output, usage = await retry_with_backoff(
+        result = await retry_with_backoff(
             call_metrics_with_tools, AI_ANALYSIS_CONFIG, "Metrics Agent with Tools"
         )
+        if isinstance(result, tuple) and len(result) == 2:
+            agent_output, usage = result
+        else:
+            agent_output, usage = result, {}
         logger.info("Metrics expert analysis completed")
 
         execution_time = (datetime.now() - agent_start_time).total_seconds()

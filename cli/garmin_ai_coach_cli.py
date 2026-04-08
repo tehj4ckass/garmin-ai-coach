@@ -101,6 +101,10 @@ class ConfigParser:
             "enable_plotting": self.config.get("extraction", {}).get("enable_plotting", False),
             "hitl_enabled": self.config.get("extraction", {}).get("hitl_enabled", True),
             "skip_synthesis": self.config.get("extraction", {}).get("skip_synthesis", False),
+            # Long-term trends (optional). These map directly to ExtractionConfig fields.
+            "include_long_term_trends": self.config.get("extraction", {}).get("include_long_term_trends", True),
+            "long_term_range": self.config.get("extraction", {}).get("long_term_range", 360),
+            "long_term_interval": self.config.get("extraction", {}).get("long_term_interval", 7),
         }
 
     def get_competitions(self) -> list[dict[str, Any]]:
@@ -296,6 +300,9 @@ async def run_analysis_from_config(config_path: Path) -> None:
             metrics_range=extraction_settings["metrics_days"],
             include_detailed_activities=True,
             include_metrics=True,
+            include_long_term_trends=bool(extraction_settings.get("include_long_term_trends", True)),
+            long_term_range=max(0, int(extraction_settings.get("long_term_range", 360) or 360)),
+            long_term_interval=max(1, int(extraction_settings.get("long_term_interval", 7) or 7)),
         )
 
         garmin_data = extractor.extract_data(extraction_config)

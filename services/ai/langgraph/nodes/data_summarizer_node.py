@@ -56,6 +56,13 @@ SUMMARIZER_FINAL_CHECKLIST = """
 - Entscheidungsrelevante Zahlen priorisiert."""
 
 
+def _safe_int(value: Any) -> int:
+    try:
+        return int(value)
+    except Exception:
+        return 0
+
+
 def create_data_summarizer_node(
     node_name: str,
     agent_role: AgentRole,
@@ -102,10 +109,13 @@ def create_data_summarizer_node(
             usage_metadata = {}
             if hasattr(response, "usage_metadata") and response.usage_metadata:
                 usage = response.usage_metadata
+                input_tokens = _safe_int(getattr(usage, "input_tokens", 0))
+                output_tokens = _safe_int(getattr(usage, "output_tokens", 0))
+                total_tokens = _safe_int(getattr(usage, "total_tokens", input_tokens + output_tokens))
                 usage_metadata[model_name] = {
-                    "input_tokens": getattr(usage, "input_tokens", 0),
-                    "output_tokens": getattr(usage, "output_tokens", 0),
-                    "total_tokens": getattr(usage, "total_tokens", getattr(usage, "input_tokens", 0) + getattr(usage, "output_tokens", 0)),
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                    "total_tokens": total_tokens,
                 }
 
             execution_time = (datetime.now() - agent_start_time).total_seconds()
