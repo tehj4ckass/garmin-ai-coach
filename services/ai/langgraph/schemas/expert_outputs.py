@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from .agent_outputs import Question
 
@@ -26,10 +26,31 @@ class ReceiverOutputs(BaseModel):
 
 
 class ExpertOutputBase(BaseModel):
-    output: list[Question] | ReceiverOutputs = Field(
-        ...,
-        description="ENTWEDER Fragen für HITL ODER vollständiger Output für nachgelagerte Konsumenten"
+    """
+    Expert agents can either:
+    - return HITL questions, OR
+    - return structured receiver outputs.
+
+    Important: We avoid Union/anyOf here because some providers (e.g. Gemini structured output)
+    do not support JSON Schema `anyOf`.
+    """
+
+    questions: list[Question] | None = Field(
+        default=None,
+        description="Optional: HITL questions. If set, outputs/content must be omitted.",
     )
+    outputs: ReceiverOutputs | None = Field(
+        default=None,
+        description="Optional: structured outputs for downstream consumers. If set, questions must be omitted.",
+    )
+
+    @model_validator(mode="after")
+    def _validate_exactly_one_mode(self):
+        has_questions = bool(self.questions)
+        has_outputs = self.outputs is not None
+        if has_questions == has_outputs:
+            raise ValueError("Provide exactly one of 'questions' or 'outputs'.")
+        return self
 
 
 class MetricsExpertOutputs(ExpertOutputBase):

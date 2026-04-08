@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import random
+import re
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import Any
@@ -11,6 +12,11 @@ from langgraph.errors import GraphInterrupt
 
 logger = logging.getLogger(__name__)
 
+try:
+    import openai
+except Exception:  # pragma: no cover
+    openai = None  # type: ignore[assignment]
+
 
 class RetryableError(Exception):
     pass
@@ -18,6 +24,28 @@ class RetryableError(Exception):
 
 class APIOverloadError(RetryableError):
     pass
+
+
+_RETRY_AFTER_RE = re.compile(r"try again in (?P<seconds>\d+(?:\.\d+)?)s", re.IGNORECASE)
+
+
+def _suggested_retry_delay_seconds(exc: Exception) -> float | None:
+    """
+    Best-effort extraction of a provider-suggested retry delay.
+
+    OpenAI rate limit errors often include: "Please try again in Xs."
+    """
+    try:
+        msg = str(exc)
+    except Exception:  # pragma: no cover
+        return None
+    match = _RETRY_AFTER_RE.search(msg)
+    if not match:
+        return None
+    try:
+        return float(match.group("seconds"))
+    except Exception:  # pragma: no cover
+        return None
 
 
 class RetryConfig:
@@ -36,7 +64,7 @@ class RetryConfig:
         self.max_delay = max_delay
         self.exponential_base = exponential_base
         self.jitter = jitter
-        self.retryable_exceptions = retryable_exceptions or {
+        default_retryable_exceptions: set[type[Exception]] = {
             anthropic.RateLimitError,  # 429 - rate limits
             anthropic.ConflictError,  # 409 - conflicts
             anthropic.InternalServerError,  # 5xx - server errors
@@ -47,6 +75,17 @@ class RetryConfig:
             anthropic.APITimeoutError,  # Timeouts
             APIOverloadError,  # Custom local exception
         }
+        if openai is not None:
+            # OpenAI SDK exceptions (used by langchain_openai)
+            default_retryable_exceptions.update(
+                {
+                    openai.RateLimitError,  # 429 - rate limits
+                    openai.APIConnectionError,  # Network/connection issues
+                    openai.APITimeoutError,  # Timeouts
+                    openai.InternalServerError,  # 5xx
+                }
+            )
+        self.retryable_exceptions = retryable_exceptions or default_retryable_exceptions
 
     def calculate_delay(self, attempt: int) -> float:
         delay = min(self.base_delay * (self.exponential_base**attempt), self.max_delay)
@@ -93,6 +132,10 @@ async def retry_with_backoff(
 
             if attempt < config.max_retries:
                 delay = config.calculate_delay(attempt)
+                suggested = _suggested_retry_delay_seconds(e)
+                if suggested is not None:
+                    # Respect provider hints to avoid wasting retries.
+                    delay = max(delay, min(suggested, config.max_delay))
                 logger.info(
                     "%s failed (attempt %s), retrying in %.1fs: %s",
                     context,

@@ -64,14 +64,28 @@ def extract_expert_output(expert_output: Any, target_field: str) -> str:
             }
         )
 
+    # Expert outputs can be either questions OR structured receiver outputs.
     output_container: Any = _MISSING
-    if hasattr(expert_output, "output"):
+    if hasattr(expert_output, "outputs") or hasattr(expert_output, "questions"):
+        questions = getattr(expert_output, "questions", None)
+        outputs = getattr(expert_output, "outputs", None)
+        if questions:
+            raise ValueError("Expert output contains questions, not analysis. HITL interaction required.")
+        output_container = outputs
+    elif hasattr(expert_output, "output"):
+        # Backwards compatibility (older persisted artifacts / dict-like fallbacks)
         output_container = expert_output.output
+        if isinstance(output_container, list):
+            raise ValueError("Expert output contains questions, not analysis. HITL interaction required.")
     elif isinstance(expert_output, Mapping):
-        output_container = expert_output.get("output")
-
-    if isinstance(output_container, list):
-        raise ValueError("Expert output contains questions, not analysis. HITL interaction required.")
+        # Dict-like fallback
+        questions = expert_output.get("questions")
+        outputs = expert_output.get("outputs")
+        if questions:
+            raise ValueError("Expert output contains questions, not analysis. HITL interaction required.")
+        output_container = outputs if outputs is not None else expert_output.get("output")
+        if isinstance(output_container, list):
+            raise ValueError("Expert output contains questions, not analysis. HITL interaction required.")
 
     for candidate in (output_container, expert_output):
         payload = _get_field(candidate, target_field)
@@ -93,14 +107,24 @@ def extract_agent_content(value: Any) -> str:
     if not value:
         return ""
 
+    if hasattr(value, "content") or hasattr(value, "questions"):
+        questions = getattr(value, "questions", None)
+        if questions:
+            raise ValueError("AgentOutput contains questions, not content. HITL interaction required.")
+        content = getattr(value, "content", "")
+        return content or ""
+
     if hasattr(value, "output"):
+        # Backwards compatibility
         output = value.output
         if isinstance(output, str):
             return output
         raise ValueError("AgentOutput contains questions, not content. HITL interaction required.")
 
     if isinstance(value, dict):
-        result = value.get("output") or value.get("content")
+        if value.get("questions"):
+            raise ValueError("AgentOutput contains questions, not content. HITL interaction required.")
+        result = value.get("content") or value.get("output")
         if isinstance(result, str):
             return result
         return str(value)

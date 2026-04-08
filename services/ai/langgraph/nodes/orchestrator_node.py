@@ -156,14 +156,24 @@ class MasterOrchestrator:
                 continue
 
             questions = None
-            if hasattr(result, "output"):
+            if hasattr(result, "questions"):
+                candidate = result.questions
+                if isinstance(candidate, list):
+                    questions = candidate
+            elif hasattr(result, "output"):
+                # Backwards compatibility
                 output = result.output
                 if isinstance(output, list):
                     questions = output
             elif isinstance(result, dict):
-                output = result.get("output", [])
-                if isinstance(output, list):
-                    questions = output
+                candidate = result.get("questions")
+                if isinstance(candidate, list):
+                    questions = candidate
+                else:
+                    # Backwards compatibility
+                    output = result.get("output", [])
+                    if isinstance(output, list):
+                        questions = output
 
             if questions:
                 for q in questions:

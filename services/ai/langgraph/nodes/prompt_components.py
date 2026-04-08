@@ -71,7 +71,9 @@ def get_plotting_instructions(agent_name: str) -> str:
 def get_hitl_instructions(agent_name: str) -> str:
     return """
 ## Menschliche Interaktion
-- **Fragen**: Wenn du Klärungsbedarf hast, setze `output` auf eine Liste von Question-Items.
-- **Ansonsten**: Setze `output` auf das normale Output-Schema deines Nodes.
+- **Fragen (HITL)**: Wenn du Klärungsbedarf hast, setze `questions` auf eine Liste von `Question`-Items und lasse das normale Ergebnisfeld leer.
+- **Ansonsten**: Liefere KEINE `questions`, sondern das normale Ergebnisfeld deines Nodes:
+  - Expert-Nodes: `outputs` (mit `for_synthesis`, `for_season_planner`, `for_weekly_planner`)
+  - Planner/Summarizer-Nodes: `content` (String)
 - **Kriterien**: Frage nur, wenn die Daten zweideutig sind oder Benutzerpräferenzen erforderlich sind. Frage nicht nach offensichtlichen Informationen.
 - **Prozess**: Wenn du Fragen stellst, pausiert deine Ausführung, bis der Benutzer antwortet."""

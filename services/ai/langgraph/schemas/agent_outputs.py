@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class Question(BaseModel):
@@ -9,9 +9,25 @@ class Question(BaseModel):
 
 
 class AgentOutput(BaseModel):
-    """Agent produces EITHER questions for HITL OR content for downstream consumers."""
+    """
+    Agent produces either HITL questions or plain content.
 
-    output: list[Question] | str = Field(
-        ...,
-        description="EITHER questions for HITL OR complete output for downstream consumers"
+    Important: Avoid Union/anyOf in the JSON schema for provider compatibility.
+    """
+
+    questions: list[Question] | None = Field(
+        default=None,
+        description="Optional: HITL questions. If set, content must be omitted.",
     )
+    content: str | None = Field(
+        default=None,
+        description="Optional: downstream content. If set, questions must be omitted.",
+    )
+
+    @model_validator(mode="after")
+    def _validate_exactly_one_mode(self):
+        has_questions = bool(self.questions)
+        has_content = self.content is not None and self.content != ""
+        if has_questions == has_content:
+            raise ValueError("Provide exactly one of 'questions' or 'content'.")
+        return self

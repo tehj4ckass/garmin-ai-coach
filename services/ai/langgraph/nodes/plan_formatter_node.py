@@ -65,13 +65,20 @@ async def plan_formatter_node(state: TrainingAnalysisState) -> dict[str, list | 
 
         def get_content(field):
             value = state.get(field, "")
+            if hasattr(value, "content") or hasattr(value, "questions"):
+                if getattr(value, "questions", None):
+                    raise ValueError("AgentOutput contains questions, not content. HITL interaction required.")
+                return getattr(value, "content", "") or ""
             if hasattr(value, "output"):
+                # Backwards compatibility
                 output = value.output
                 if isinstance(output, str):
                     return output
                 raise ValueError("AgentOutput contains questions, not content. HITL interaction required.")
             if isinstance(value, dict):
-                return value.get("output", value.get("content", value))
+                if value.get("questions"):
+                    raise ValueError("AgentOutput contains questions, not content. HITL interaction required.")
+                return value.get("content", value.get("output", value))
             return value
 
         async def call_plan_formatting():
