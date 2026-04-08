@@ -34,6 +34,8 @@ SYNTHESIS_PLOT_INSTRUCTIONS = """
 SYNTHESIS_USER_PROMPT_BASE = """Synthetisiere die Expertenanalysen zu einem umfassenden Athletenbericht.
 
 ## Inputs
+### Athlet
+- Name: {athlete_name}
 ### Metriken
 ```markdown
 {metrics_result}
@@ -57,6 +59,7 @@ SYNTHESIS_USER_PROMPT_BASE = """Synthetisiere die Expertenanalysen zu einem umfa
 3. **Synthetisieren**: Erstelle eine kohärente Geschichte, nicht nur eine Liste von Fakten.
 
 ## Ausgabeformat
+- **Header**: Nutze den Athletennamen exakt wie angegeben (keine erfundenen Namen).
 - **Executive Summary**: Status auf hoher Ebene und wichtigste Erkenntnisse.
 - **Key Performance Indicators**: Tabellenformat.
 - **Deep Dive**: Strukturierte Abschnitte mit klaren Überschriften.

@@ -32,6 +32,7 @@ Erstelle ein vollständiges HTML-Dokument mit:
 2. **Design**: Sauberes CSS, responsives Layout, professionelle Typografie.
 3. **Visuelle Elemente**: Nutze Emojis und Farben, um Daten hervorzuheben (z. B. 🎯 Ziele, 📊 Metriken).
 4. **Vollständigkeit**: Füge ALLE Inhalte, Metriken und Scores ein.
+5. **Header**: Setze oben einen klaren Titel mit dem Athletennamen: "{athlete_name}" (keine erfundenen Namen).
 
 ## Ausgabe
 Gib NUR das vollständige HTML-Dokument zurück."""
@@ -62,7 +63,10 @@ async def formatter_node(state: TrainingAnalysisState) -> dict[str, list | str]:
             response = await ModelSelector.get_llm(AgentRole.FORMATTER).ainvoke([
                 {"role": "system", "content": FORMATTER_SYSTEM_PROMPT},
                 {"role": "user", "content": (
-                    FORMATTER_USER_PROMPT_BASE.format(synthesis_result=synthesis_result)
+                    FORMATTER_USER_PROMPT_BASE.format(
+                        synthesis_result=synthesis_result,
+                        athlete_name=state.get("athlete_name", "Athlete"),
+                    )
                     + (FORMATTER_PLOT_INSTRUCTIONS if plotting_enabled else "")
                 )},
             ])
