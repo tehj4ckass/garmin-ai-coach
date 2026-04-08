@@ -205,6 +205,21 @@ def _save_expert_outputs(output_dir: Path, result: dict[str, Any]) -> list[str]:
     return files_generated
 
 
+def _save_garmin_raw_data(output_dir: Path, garmin_data: dict[str, Any]) -> list[str]:
+    """
+    Persist the extracted Garmin data for this run.
+
+    This enables post-run Q&A and debugging without re-fetching from Garmin.
+    """
+    output_path = output_dir / "garmin_data.json"
+    output_path.write_text(
+        json.dumps(garmin_data, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    logger.info("Saved: %s", output_path)
+    return ["garmin_data.json"]
+
+
 def _save_plan_outputs(output_dir: Path, result: dict[str, Any]) -> list[str]:
     files_generated: list[str] = []
 
@@ -326,10 +341,12 @@ async def run_analysis_from_config(config_path: Path) -> None:
 
         logger.info("Starte KI-Analyse und Planung...")
 
+        garmin_data_dict = asdict(garmin_data)
+
         result = await run_complete_analysis_and_planning(
             user_id="cli_user",
             athlete_name=athlete_name,
-            garmin_data=asdict(garmin_data),
+            garmin_data=garmin_data_dict,
             analysis_context=analysis_context,
             planning_context=planning_context,
             competitions=competitions,
@@ -344,6 +361,7 @@ async def run_analysis_from_config(config_path: Path) -> None:
         logger.info("Speichere Ergebnisse...")
 
         files_generated: list[str] = []
+        files_generated.extend(_save_garmin_raw_data(output_dir, garmin_data_dict))
         files_generated.extend(_save_html_outputs(output_dir, result))
         files_generated.extend(_save_expert_outputs(output_dir, result))
         files_generated.extend(_save_plan_outputs(output_dir, result))
