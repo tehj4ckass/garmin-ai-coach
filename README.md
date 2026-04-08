@@ -4,6 +4,7 @@
 >
 > - an evidence-based training analysis report (`analysis.html`)
 > - a season strategy + compact 4-week plan (`planning.html`)
+> - **(this fork)** **Coach Chat** — *talk to your training data*: a browser Q&A on each saved run, grounded in your artifacts
 >
 > Powered by a LangGraph multi-agent workflow with optional human-in-the-loop (HITL) questions.
 
@@ -17,12 +18,29 @@
 
 ---
 
+## Coach Chat — *talk to your training data*
+
+**Natural-language follow-ups on every analysis** — the same insights you just generated, now in a conversation. After a CLI run, everything lives in a **timestamped folder** under `./data/` (expert JSON, `garmin_data.json`, HTML). Open **Coach Chat** to challenge a recommendation, explore alternatives (e.g. intervals vs. zone 2), or go deeper on evidence — **without re-running extraction**.
+
+```bash
+pixi run qa-chat
+```
+
+- **Same `extraction.ai_mode` and API keys** as the main pipeline (reads `coach_config.yaml` by default).
+- **Grounded answers** from the run you select (experts + optional raw extract + report snippets).
+- **Streaming replies**, **Stop** in the UI, and **server-side timeouts / token caps** — details in [`cli/README.md`](cli/README.md#post-run-qa-chainlit).
+
+*Tip: after your first successful run, open Coach Chat once — it’s the fastest way to stress-test whether the analysis matches how you actually train.*
+
+---
+
 ## About this fork
 
 This repo keeps the same **CLI-first, LangGraph multi-agent** design as upstream, with a few practical differences:
 
 | Focus | What’s different here |
 |--------|----------------------|
+| **Coach Chat** (*talk to your training data*) | **Browser Q&A** (`pixi run qa-chat`) on a finished run — same model tier as the pipeline, conversation grounded in saved artifacts. See section above and [`cli/qa_chainlit_app.py`](cli/qa_chainlit_app.py). |
 | **Language (German)** | **System prompts, agent instructions, and the written reports** (`analysis.html`, `planning.html`, HITL console text in German) target **German** output. Upstream is largely English-oriented; your `context.*` fields in YAML can still be written in any language, but the **default coaching voice** is German. |
 | **Models** | Tiered **`extraction.ai_mode`** from cheap/fast to stronger/pricier: `development` (Gemini Flash) → `cost_effective` (Haiku) → `standard` (Claude 4) → `gemini_pro` → `openai` (`gpt-4o`). Each tier uses **direct provider APIs** where possible, with optional OpenRouter fallback — see [`services/ai/ai_settings.py`](services/ai/ai_settings.py). |
 | **`run_type`** | `full` = full pipeline (**analysis + planning**, `analysis.html` + `planning.html`). `light` = **analysis only** (`analysis.html`); the entire **planning branch** is skipped (faster/cheaper). Set `extraction.run_type` in YAML; the CLI exports `RUN_TYPE` the same way it does `AI_MODE`. |
@@ -42,6 +60,9 @@ pixi run coach-init my_training_config.yaml
 
 # 3) Edit the config with your details, then run
 pixi run coach-cli --config my_training_config.yaml
+
+# 4) Coach Chat — talk to your training data (follow-ups in the browser)
+pixi run qa-chat
 ```
 
 Open the generated reports:
@@ -49,10 +70,13 @@ Open the generated reports:
 - `./data/<run-folder>/analysis.html`
 - `./data/<run-folder>/planning.html`
 
+Then launch **`pixi run qa-chat`**, pick that run folder, and keep the conversation going in the browser.
+
 ---
 
 ## ✨ What You Get
 
+- **Coach Chat** — *talk to your training data*: conversational follow-ups on the same run, grounded in expert outputs + `garmin_data.json` (see [`cli/README.md`](cli/README.md#post-run-qa-chainlit))
 - KPI dashboard: chronic/acute load, ACWR, HRV, sleep RHR, weight trend
 - Running execution analysis: progression evidence + coaching insights
 - Physiology & readiness: baseline profiling + crash signature detection
@@ -66,27 +90,26 @@ Open the generated reports:
 
 ## 🎯 See It In Action
 
+### 💬 Coach Chat
+
+![Coach Chat — Run auswählen](docs/screenshots/coach_chat_welcome.png)
+*Willkommen: Runs unter `data/` als Tabelle; Nummer, Ordnername oder Pfad eingeben.*
+
+![Coach Chat — Kontext geladen](docs/screenshots/coach_chat_run_selected.png)
+*Nach der Auswahl: Bestätigung mit Run-Ordner und Hinweis auf Fragen (ohne LLM-Aufruf für diesen Schritt).*
+
 ### 📊 Analysis Reports
 
 ![KPI Dashboard](docs/screenshots/kpi_dashboard.png)
 *Key Performance Indicators: training load, ACWR, HRV, recovery metrics, and body composition at a glance*
 
-![Running Execution Analysis](docs/screenshots/running_execution_analysis.png)
-*Evidence-based progression tracking with threshold durability insights and coaching notes*
-
 ![Physiology & Readiness](docs/screenshots/physiology_readiness.png)
 *Deep physiological analysis: baseline profiling, crash signature detection, and current readiness assessment*
-
-![Actionable Recommendations](docs/screenshots/recommendations.png)
-*Sport-specific recommendations organized by category: load management, running, cycling, and recovery*
 
 ### 📅 Training Plans
 
 ![Season Plan Overview](docs/screenshots/season_plan_overview.png)
 *Macro-cycle season plan with race anchors, phase architecture, and periodization timeline*
-
-![Daily Workout Details](docs/screenshots/plan_workout_day.png)
-*Structured day plan with intensity zones, adaptations, and monitoring cues*
 
 ---
 
@@ -178,6 +201,7 @@ Inside that run folder:
 - `analysis.html` — training analysis report
 - `planning.html` — season overview + compact 4-week plan
 - `metrics_expert.json`, `activity_expert.json`, `physiology_expert.json` — structured expert outputs
+- `garmin_data.json` — extracted Garmin payload for this run (also used by **Coach Chat**)
 - `season_plan.md`, `weekly_plan.md` — intermediate planning artifacts
 - `summary.json` — metadata including `run_type`; cost fields when available; `cost_calculable`
 

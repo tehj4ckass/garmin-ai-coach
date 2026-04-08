@@ -29,3 +29,6 @@ plotly>=6.3.1,<7
 
 httpx>=0.27.2,<0.28
 setuptools>=75.6.0
+
+# Optional: post-run Q&A UI (see pixi task `qa-chat`)
+chainlit>=2.0.0,<3

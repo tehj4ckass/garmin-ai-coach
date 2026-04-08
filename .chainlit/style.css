@@ -1,0 +1,10 @@
+/* Subtle polish for the Q&A UI (Chainlit injects this globally). */
+
+a {
+    color: #7dd3fc;
+}
+
+/* Slightly calmer message width on very large screens */
+main .MuiBox-root {
+    max-width: 52rem;
+}

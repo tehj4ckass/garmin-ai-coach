@@ -1,0 +1,14 @@
+[project]
+# Disable telemetry for a local coaching tool
+enable_telemetry = false
+user_env = []
+
+[UI]
+name = "Garmin AI Coach · Q&A"
+# dark reads well for long coaching answers
+default_theme = "dark"
+layout = "wide"
+
+[meta]
+# shown in browser tab / UI where supported
+generated_by = "garmin-ai-coach_gem"

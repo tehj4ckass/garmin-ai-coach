@@ -5,6 +5,7 @@ Command-line interface for the AI endurance coach: YAML/JSON config, Garmin extr
 **This fork:** agent prompts and **report text default to German** (see [About this fork](../README.md#about-this-fork) in the root README). It also adds tiered **`extraction.ai_mode`** (Google / Anthropic / OpenAI) and **`extraction.run_type`** (`full` = analysis + planning, `light` = `analysis.html` only).
 
 - CLI script: [garmin_ai_coach_cli.py](garmin_ai_coach_cli.py)
+- **Coach Chat** (*talk to your training data*, Chainlit UI): [qa_chainlit_app.py](qa_chainlit_app.py) — `pixi run qa-chat`
 - Config: `pixi run coach-init my_config.yaml` or start from [coach_config.yaml](../coach_config.yaml) / [cli/coach_config.yaml](coach_config.yaml)
 - Pixi tasks: [pixi.toml](../pixi.toml)
 
@@ -26,6 +27,29 @@ Using Python directly:
 python cli/garmin_ai_coach_cli.py --init-config my_config.yaml
 python cli/garmin_ai_coach_cli.py --config my_config.yaml [--output-dir ./data]
 ```
+
+### Post-run Q&A (Chainlit) — *Coach Chat*
+
+After a successful run, artifacts live under `output.directory` (default `./data/<run-folder>/`). **Talk to your training data** in a browser chat: same **`extraction.ai_mode`** / API keys as the main CLI (reads `coach_config.yaml` by default).
+
+```bash
+# from repo root
+pixi run qa-chat
+```
+
+On first message, pick a run by **number**, **folder name**, or **full path** to a directory that contains `garmin_data.json` and/or `*_expert.json`.
+
+Optional env: `COACH_CONFIG` (path to YAML, default `coach_config.yaml`), `GARMIN_COACH_DATA` or `COACH_DATA_DIR` to override the data root without editing YAML.
+
+Q&A cost / safety (optional env, defaults in `cli/qa_chainlit_app.py`):
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `QA_STREAM_TIMEOUT_SEC` | `180` | Max seconds per assistant reply (wall clock); then stream aborts with a footer. |
+| `QA_MAX_OUTPUT_TOKENS` | `4096` | Bound output length via LangChain `.bind(max_tokens=…)` (best-effort per provider). |
+| `QA_MAX_USER_MESSAGE_CHARS` | `12000` | Reject oversized user paste to protect context + cost. |
+
+While a reply is streaming, use the **Stop** control in the Chainlit UI; it sets a cancel flag between chunks.
 
 ## Command reference
 

@@ -42,6 +42,8 @@ ruff = ">=0.14.1, <0.15"
 vulture = ">=2.14, <3"
 types-PyYAML = "*"
 types-requests = "*"
+chainlit = ">=2.0.0, <3"
+playwright = ">=1.49, <2"
 
 [tasks]
 # Development tasks
@@ -62,6 +64,8 @@ dead-code-verbose = "vulture --config vulture.toml --verbose"
 # CLI coach interface
 coach-cli = "python cli/garmin_ai_coach_cli.py"
 coach-init = "python cli/garmin_ai_coach_cli.py --init-config"
+# Post-run Q&A (Chainlit UI; uses extraction.ai_mode from coach_config.yaml)
+qa-chat = "chainlit run cli/qa_chainlit_app.py"
 
 [environments]
 default = { solve-group = "default" }
