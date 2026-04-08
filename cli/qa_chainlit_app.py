@@ -9,7 +9,7 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 import chainlit as cl
 import yaml
@@ -48,11 +48,71 @@ def _env_float(name: str, default: float) -> float:
 
 
 # Max wall-clock time for one assistant reply (streaming).
-QA_STREAM_TIMEOUT_SEC = _env_float("QA_STREAM_TIMEOUT_SEC", 180.0)
-# Cap output tokens for Q&A only (providers differ; LangChain maps where supported).
-QA_MAX_OUTPUT_TOKENS = _env_int("QA_MAX_OUTPUT_TOKENS", 4096)
+QA_STREAM_TIMEOUT_SEC = _env_float("QA_STREAM_TIMEOUT_SEC", 60.0)
 # Reject comically large single user messages (protects context + cost).
 QA_MAX_USER_MESSAGE_CHARS = _env_int("QA_MAX_USER_MESSAGE_CHARS", 12000)
+
+
+def _qa_max_output_tokens() -> int:
+    """Cap completion length (saves output $); use QA_RESPONSE_BUDGET or QA_MAX_OUTPUT_TOKENS."""
+    raw = (os.environ.get("QA_MAX_OUTPUT_TOKENS") or "").strip()
+    if raw:
+        try:
+            return max(1, int(raw))
+        except ValueError:
+            logger.warning("Invalid QA_MAX_OUTPUT_TOKENS=%r; using QA_RESPONSE_BUDGET preset", raw)
+    budget = (os.environ.get("QA_RESPONSE_BUDGET") or "medium").strip().lower()
+    if budget in ("short", "concise", "klein", "mini"):
+        return 896
+    if budget in ("long", "ausführlich"):
+        return 3072
+    if budget in ("full", "max"):
+        return 4096
+    return 1536
+
+
+# Resolved once at import (env fixed for Chainlit process).
+QA_MAX_OUTPUT_TOKENS = _qa_max_output_tokens()
+
+
+class QAContextLimits(NamedTuple):
+    """Per-artifact char caps for Q&A context (approx. input-token / cost control).
+
+    NamedTuple (not dataclass): Chainlit loads this file via ``exec_module``; under
+    Python 3.13, ``@dataclass`` can crash because ``sys.modules`` is not set yet.
+    """
+
+    summary_chars: int
+    expert_chars: int
+    garmin_chars: int
+    markdown_chars: int
+    html_chars: int
+
+
+def _qa_context_limits() -> QAContextLimits:
+    """Defaults target lower prompt size; use QA_CONTEXT_PROFILE=full for legacy (large) context."""
+    raw = (os.environ.get("QA_CONTEXT_PROFILE") or "balanced").strip().lower()
+    if raw in ("full", "legacy", "max"):
+        base = QAContextLimits(8000, 45000, 100000, 25000, 35000)
+    elif raw in ("economy", "cheap", "minimal"):
+        base = QAContextLimits(4000, 8000, 12000, 4000, 6000)
+    elif raw in ("balanced", "default", ""):
+        base = QAContextLimits(6000, 14000, 24000, 8000, 10000)
+    else:
+        logger.warning("Unknown QA_CONTEXT_PROFILE=%r; using balanced", raw)
+        base = QAContextLimits(6000, 14000, 24000, 8000, 10000)
+    return QAContextLimits(
+        summary_chars=_env_int("QA_CONTEXT_SUMMARY_MAX_CHARS", base.summary_chars),
+        expert_chars=_env_int("QA_CONTEXT_EXPERT_MAX_CHARS", base.expert_chars),
+        garmin_chars=_env_int("QA_CONTEXT_GARMIN_MAX_CHARS", base.garmin_chars),
+        markdown_chars=_env_int("QA_CONTEXT_MARKDOWN_MAX_CHARS", base.markdown_chars),
+        html_chars=_env_int("QA_CONTEXT_HTML_MAX_CHARS", base.html_chars),
+    )
+
+
+def _qa_context_profile_label() -> str:
+    p = (os.environ.get("QA_CONTEXT_PROFILE") or "balanced").strip() or "balanced"
+    return p.lower()
 
 
 class QAUserCancelled(Exception):
@@ -64,15 +124,21 @@ SYSTEM_PROMPT = """Du bist der **Garmin AI Coach - Q&A-Assistent**.
 ## Kontext
 Der Nutzer hat bereits eine vollständige Analyse ausgeführt. Dir liegen strukturierte Ergebnisse (Experten-JSON, optional Rohdaten) vor.
 
+## Länge (verbindlich)
+- Antworte **knapp**: Lieber **3–8 knackige Bulletpoints** oder **2 kurze Absätze** als lange Essays.
+- **Keine** Wiederholungen, keine „Einleitung/Fazit“-Floskeln, kein erfundener Mehrwert-Text.
+- **Details nur**, wenn die Frage sie braucht — oder mit einem Satz anbieten: *„Soll ich X vertiefen?“*
+- Zahlen/Belege **gezielt** (1–2 pro Aussage), nicht die ganze Analyse neu erzählen.
+
 ## Regeln
 1. Beantworte Fragen **primär auf Basis der mitgelieferten Artefakte**. Zitiere oder paraphrasiere konkrete Punkte (Signals, Evidence, Zahlen).
 2. Wenn etwas **nicht** in den Daten steht, sage das klar: „Dazu liegen in diesem Run keine Daten vor.“
 3. Du darfst **allgemeines Trainingswissen** nutzen, um Vorschläge zu formulieren — kennzeichne das als **„Coaching-Hypothese“** oder **„allgemeine Empfehlung“**, wenn es nicht direkt aus den Artefakten folgt.
 4. Antworte auf **Deutsch**, sachlich und ermutigend.
-5. Bei konkreten Workout-Vorschlägen: Dauer, Intensität (Zone/RPE/HR wo sinnvoll), Pausen — und erwähne **Risiken**, wenn der Plan von der ursprünglichen Empfehlung abweicht.
+5. Bei konkreten Workout-Vorschlägen: Dauer, Intensität (Zone/RPE/HR wo sinnvoll), Pausen — kurz; erwähne **Risiken**, wenn der Plan von der ursprünglichen Empfehlung abweicht.
 
 ## Format
-- Kurze **Antwort** zuerst, dann optional **Details** mit Unterpunkten.
+- Zuerst die **Kernantwort** (1–2 Sätze oder 3 bullets), nur bei Bedarf **„Details:“** mit Unterpunkten.
 - Wenn sinnvoll: **Belege** mit Verweis auf die Quelle (z. B. "metrics_expert.json - for_weekly_planner").
 """
 
@@ -106,15 +172,17 @@ def _project_data_root() -> Path:
 def apply_coach_config_ai_mode() -> str:
     """Set AI_MODE from coach_config.yaml (extraction.ai_mode) and reload settings."""
     cfg_path = Path(os.environ.get("COACH_CONFIG", str(DEFAULT_COACH_CONFIG))).expanduser().resolve()
-    if not cfg_path.exists():
-        reload_config()
-        ai_settings.reload()
-        return get_ai_mode_label()
-
-    doc = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
-    mode = (doc.get("extraction") or {}).get("ai_mode")
-    if mode is not None:
-        m = str(mode).strip().lower()
+    if cfg_path.exists():
+        doc = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+        mode = (doc.get("extraction") or {}).get("ai_mode")
+        if mode is not None:
+            m = str(mode).strip().lower()
+            if m == "pro":
+                m = "gemini_pro"
+            os.environ["AI_MODE"] = m
+    qa_override = (os.environ.get("QA_AI_MODE") or "").strip()
+    if qa_override:
+        m = qa_override.lower()
         if m == "pro":
             m = "gemini_pro"
         os.environ["AI_MODE"] = m
@@ -187,21 +255,28 @@ def _read_text_file(path: Path, max_chars: int) -> str:
 
 def build_context_pack(run_dir: Path) -> str:
     """Assemble prompt context from a run folder."""
+    lim = _qa_context_limits()
     parts: list[str] = []
     parts.append(f"## Analyse-Run\n**Ordner:** `{run_dir}`\n\n")
 
     summary = _safe_read_json(run_dir / "summary.json")
     if summary:
-        parts.append(_json_block("summary.json", summary, max_chars=8000))
+        parts.append(_json_block("summary.json", summary, max_chars=lim.summary_chars))
 
     for name in ("metrics_expert.json", "activity_expert.json", "physiology_expert.json"):
         data = _safe_read_json(run_dir / name)
         if data:
-            parts.append(_json_block(name, data, max_chars=45000))
+            parts.append(_json_block(name, data, max_chars=lim.expert_chars))
 
     garmin = _safe_read_json(run_dir / "garmin_data.json")
     if garmin is not None:
-        parts.append(_json_block("garmin_data.json (extrahierte Roh-/Strukturdaten)", garmin, max_chars=100000))
+        parts.append(
+            _json_block(
+                "garmin_data.json (extrahierte Roh-/Strukturdaten)",
+                garmin,
+                max_chars=lim.garmin_chars,
+            )
+        )
     else:
         parts.append("### garmin_data.json\n_(Nicht vorhanden — älterer Run ohne Persistenz.)_\n\n")
 
@@ -211,15 +286,24 @@ def build_context_pack(run_dir: Path) -> str:
     ):
         p = run_dir / md_name
         if p.exists():
-            txt = _read_text_file(p, max_chars=25000)
+            txt = _read_text_file(p, max_chars=lim.markdown_chars)
             parts.append(f"### {title}\n```markdown\n{txt}\n```\n\n")
 
     analysis_html = run_dir / "analysis.html"
     if analysis_html.exists():
-        hx = _read_text_file(analysis_html, max_chars=35000)
+        hx = _read_text_file(analysis_html, max_chars=lim.html_chars)
         parts.append(f"### analysis.html (Auszug)\n```html\n{hx}\n```\n\n")
 
-    return "".join(parts)
+    packed = "".join(parts)
+    logger.info(
+        "Q&A context pack: profile=%s approx_chars=%d (caps: expert=%d garmin=%d html=%d)",
+        _qa_context_profile_label(),
+        len(packed),
+        lim.expert_chars,
+        lim.garmin_chars,
+        lim.html_chars,
+    )
+    return packed
 
 
 def list_recent_runs(data_root: Path, limit: int = 15) -> list[Path]:
@@ -285,11 +369,27 @@ async def on_chat_start() -> None:
         "### Garmin AI Coach · Q&A",
         "",
         f"**AI_MODE:** `{mode}` · **Modell (Synthese):** `{model}`",
-        "",
-        f"Daten-Root: `{data_root}`",
-        "",
-        "Wähle einen **abgeschlossenen Analyse-Run**, damit ich die Experten-Ergebnisse und Rohdaten einbeziehen kann.",
     ]
+    if (os.environ.get("QA_AI_MODE") or "").strip():
+        lines.append(
+            "_(**QA_AI_MODE** ist gesetzt: günstigeres/explizites Chat-Tier unabhängig von `coach_config`.)_"
+        )
+    lines.append(
+        f"_(Eingabe-Tokens/Kosten: Kontextprofil **`{_qa_context_profile_label()}`** — `QA_CONTEXT_PROFILE` "
+        "`balanced` (Standard) · `economy` · `full`.)_"
+    )
+    lines.append(
+        f"_(Antwortlänge: **~{QA_MAX_OUTPUT_TOKENS}** Output-Tokens cap — `QA_RESPONSE_BUDGET` short · medium · long · full "
+        "oder `QA_MAX_OUTPUT_TOKENS`.)_"
+    )
+    lines.extend(
+        [
+            "",
+            f"Daten-Root: `{data_root}`",
+            "",
+            "Wähle einen **abgeschlossenen Analyse-Run**, damit ich die Experten-Ergebnisse und Rohdaten einbeziehen kann.",
+        ]
+    )
     if runs:
         lines.append("")
         lines.append("| # | Run-Ordner |")

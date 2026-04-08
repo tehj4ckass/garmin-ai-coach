@@ -30,7 +30,7 @@ python cli/garmin_ai_coach_cli.py --config my_config.yaml [--output-dir ./data]
 
 ### Post-run Q&A (Chainlit) — *Coach Chat*
 
-After a successful run, artifacts live under `output.directory` (default `./data/<run-folder>/`). **Talk to your training data** in a browser chat: same **`extraction.ai_mode`** / API keys as the main CLI (reads `coach_config.yaml` by default).
+After a successful run, artifacts live under `output.directory` (default `./data/<run-folder>/`). **Talk to your training data** in a browser chat (reads `coach_config.yaml` by default for **`extraction.ai_mode`** / API keys — unless you override with **`QA_AI_MODE`**).
 
 ```bash
 # from repo root
@@ -41,12 +41,20 @@ On first message, pick a run by **number**, **folder name**, or **full path** to
 
 Optional env: `COACH_CONFIG` (path to YAML, default `coach_config.yaml`), `GARMIN_COACH_DATA` or `COACH_DATA_DIR` to override the data root without editing YAML.
 
-Q&A cost / safety (optional env, defaults in `cli/qa_chainlit_app.py`):
+**Prompt cost:** Coach Chat sends large artifacts (expert JSON, `garmin_data`, HTML). Input tokens dominate the bill. Defaults now use a **`balanced`** context profile (smaller caps than before). Set **`QA_CONTEXT_PROFILE=full`** to restore the previous (very large) context, or **`economy`** for minimum size.
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `QA_STREAM_TIMEOUT_SEC` | `180` | Max seconds per assistant reply (wall clock); then stream aborts with a footer. |
-| `QA_MAX_OUTPUT_TOKENS` | `4096` | Bound output length via LangChain `.bind(max_tokens=…)` (best-effort per provider). |
+| `QA_AI_MODE` | _(unset)_ | Optional: same values as `extraction.ai_mode` (`development`, `cost_effective`, `standard`, `gemini_pro` / `pro`, `openai`). Overrides YAML **for this Chainlit app only** so you can keep `standard` for the CLI but e.g. `cost_effective` or `development` for chat. |
+| `QA_CONTEXT_PROFILE` | `balanced` | `balanced` (default) · `economy` (smaller) · `full` (legacy caps). Fine-tune with `QA_CONTEXT_*_MAX_CHARS` below. |
+| `QA_CONTEXT_SUMMARY_MAX_CHARS` | _(profile)_ | Override max characters embedded from `summary.json`. |
+| `QA_CONTEXT_EXPERT_MAX_CHARS` | _(profile)_ | Per expert JSON (`metrics` / `activity` / `physiology`). |
+| `QA_CONTEXT_GARMIN_MAX_CHARS` | _(profile)_ | `garmin_data.json` excerpt. |
+| `QA_CONTEXT_MARKDOWN_MAX_CHARS` | _(profile)_ | `season_plan.md` / `weekly_plan.md` each. |
+| `QA_CONTEXT_HTML_MAX_CHARS` | _(profile)_ | `analysis.html` excerpt. |
+| `QA_STREAM_TIMEOUT_SEC` | `60` | Max seconds per assistant reply (wall clock); then stream aborts with a footer. |
+| `QA_RESPONSE_BUDGET` | `medium` | If `QA_MAX_OUTPUT_TOKENS` is unset: `short` (~896) · `medium` (~1536, default) · `long` (~3072) · `full` (4096). Shorter replies = fewer completion tokens (lower $). |
+| `QA_MAX_OUTPUT_TOKENS` | _(see budget)_ | Explicit cap overrides `QA_RESPONSE_BUDGET`. LangChain `.bind(max_tokens=…)` (best-effort per provider). |
 | `QA_MAX_USER_MESSAGE_CHARS` | `12000` | Reject oversized user paste to protect context + cost. |
 
 While a reply is streaming, use the **Stop** control in the Chainlit UI; it sets a cancel flag between chunks.
