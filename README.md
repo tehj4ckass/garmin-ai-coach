@@ -5,16 +5,16 @@
 > - an evidence-based training analysis report (`analysis.html`)
 > - a season strategy + compact 4-week plan (`planning.html`)
 > - **(this fork)** **Coach Chat** — *talk to your training data*: a browser Q&A on each saved run, grounded in your artifacts
+> - **(this fork)** Output language is German
 >
-> Powered by a LangGraph multi-agent workflow with optional human-in-the-loop (HITL) questions.
-
+> Not affiliated with Garmin. No medical advice.
+> 
 [![Made with Python](https://img.shields.io/badge/Made%20with-Python-blue.svg)](https://python.org)
 [![Powered by LangGraph](https://img.shields.io/badge/Powered%20by-LangGraph-purple.svg)](https://langchain-ai.github.io/langgraph/)
+[![Powered by Chainlit](https://img.shields.io/badge/Powered%20by-Chainlit-FF4B4B?style=flat&logo=chainlit&logoColor=white)](https://github.com/Chainlit/chainlit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Providers:** direct **Google (Gemini)**, **Anthropic**, **OpenAI**, plus **OpenRouter** (e.g. as a fallback router).
-
-> Not affiliated with Garmin. Not medical advice.
+![Supports](https://img.shields.io/badge/Supports-grey?style=flat) [![Anthropic](https://img.shields.io/badge/Anthropic-755139?style=flat&logo=anthropic&logoColor=white)](https://www.anthropic.com) [![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat&logo=openai&logoColor=white)](https://openai.com) [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=flat&logo=googlegemini&logoColor=white)](https://ai.google.dev) [![OpenRouter](https://img.shields.io/badge/OpenRouter-6566F1?style=flat&logo=openrouter&logoColor=white)](https://openrouter.ai)
 
 ---
 
@@ -90,26 +90,27 @@ Then launch **`pixi run qa-chat`**, pick that run folder, and keep the conversat
 
 ## 🎯 See It In Action
 
-### 💬 Coach Chat
-
-![Coach Chat — Run auswählen](docs/screenshots/coach_chat_welcome.png)
-*Willkommen: Runs unter `data/` als Tabelle; Nummer, Ordnername oder Pfad eingeben.*
-
-![Coach Chat — Kontext geladen](docs/screenshots/coach_chat_run_selected.png)
-*Nach der Auswahl: Bestätigung mit Run-Ordner und Hinweis auf Fragen (ohne LLM-Aufruf für diesen Schritt).*
-
 ### 📊 Analysis Reports
 
+*Key Performance Indicators: training load, ACWR, HRV, recovery metrics, and body composition at a glance:*
 ![KPI Dashboard](docs/screenshots/kpi_dashboard.png)
-*Key Performance Indicators: training load, ACWR, HRV, recovery metrics, and body composition at a glance*
 
+*Deep physiological analysis: baseline profiling, crash signature detection, and current readiness assessment:*
 ![Physiology & Readiness](docs/screenshots/physiology_readiness.png)
-*Deep physiological analysis: baseline profiling, crash signature detection, and current readiness assessment*
 
 ### 📅 Training Plans
 
+*Macro-cycle season plan with race anchors, phase architecture, and periodization timeline:*
 ![Season Plan Overview](docs/screenshots/season_plan_overview.png)
-*Macro-cycle season plan with race anchors, phase architecture, and periodization timeline*
+
+### 💬 Coach Chat
+
+*Runs unter `data/` als Tabelle; Nummer, Ordnername oder Pfad eingeben:*
+![Coach Chat — Run auswählen](docs/screenshots/coach_chat_welcome.png)
+
+*Nach der Auswahl: Bestätigung mit Run-Ordner und Hinweis auf Fragen (ohne LLM-Aufruf für diesen Schritt):*
+![Coach Chat — Kontext geladen](docs/screenshots/coach_chat_run_selected.png)
+
 
 ---
 
