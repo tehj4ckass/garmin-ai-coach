@@ -6,6 +6,15 @@
 - **Pixi** - Package management and environment handling
 - **Pydantic v2** - Data validation and settings management
 
+## UI / App Layer
+
+### Chainlit (Post-run Q&A UI) ✅ **ACTIVE**
+- **Chainlit 2.0+** - Lightweight chat UI for interacting with the extracted results after a run
+  - Start: `pixi run qa-chat`
+  - Entry point: `cli/qa_chainlit_app.py`
+  - UI config: `.chainlit/config.toml`
+- **Playwright 1.49+** - Browser automation dependency used by Chainlit features/tests where applicable
+
 ## AI & LLM Providers
 
 ### Supported Models
@@ -88,6 +97,11 @@ CLI -> StateGraph Workflow -> Garmin Connect -> AI Nodes -> HTML Reports
       (services/ai/langgraph/ - ACTIVE)
 ```
 
+**Optional UI Layer (after the run):**
+```
+Extracted artifacts (reports / structured outputs) -> Chainlit Q&A UI
+```
+
 ### LangGraph Workflow System
 
 **State-based orchestration with typed schemas:**
@@ -161,6 +175,9 @@ pixi run type-check     # Type check with MyPy
 # Testing
 pixi run test           # Run test suite
 pixi run test-cov       # Run with coverage
+
+# UI (Post-run Q&A)
+pixi run qa-chat        # Start Chainlit Q&A UI
 
 # Analysis
 pixi run dead-code      # Detect unused code
