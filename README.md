@@ -10,6 +10,7 @@
 
 [![Made with Python](https://img.shields.io/badge/Made%20with-Python-blue.svg)](https://python.org)
 [![Powered by LangGraph](https://img.shields.io/badge/Powered%20by-LangGraph-purple.svg)](https://langchain-ai.github.io/langgraph/)
+[![Powered by Chainlit](https://img.shields.io/badge/Powered%20by-Chainlit-FF4B4B?style=flat&logo=chainlit&logoColor=white)](https://github.com/Chainlit/chainlit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **Providers:** direct **Google (Gemini)**, **Anthropic**, **OpenAI**, plus **OpenRouter** (e.g. as a fallback router).
