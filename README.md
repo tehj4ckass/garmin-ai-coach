@@ -5,9 +5,10 @@
 > - an evidence-based training analysis report (`analysis.html`)
 > - a season strategy + compact 4-week plan (`planning.html`)
 > - **(this fork)** **Coach Chat** — *talk to your training data*: a browser Q&A on each saved run, grounded in your artifacts
+> - **(this fork)** Output language is German
 >
-> Powered by a LangGraph multi-agent workflow with optional human-in-the-loop (HITL) questions.
-
+> Not affiliated with Garmin. No medical advice.
+> 
 [![Made with Python](https://img.shields.io/badge/Made%20with-Python-blue.svg)](https://python.org)
 [![Powered by LangGraph](https://img.shields.io/badge/Powered%20by-LangGraph-purple.svg)](https://langchain-ai.github.io/langgraph/)
 [![Powered by Chainlit](https://img.shields.io/badge/Powered%20by-Chainlit-FF4B4B?style=flat&logo=chainlit&logoColor=white)](https://github.com/Chainlit/chainlit)
@@ -15,7 +16,6 @@
 
 **AI Providers:** ![Anthropic](https://img.shields.io/badge/Anthropic-755139?style=flat&logo=anthropic&logoColor=white) ![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat&logo=openai&logoColor=white) ![Google Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=flat&logo=googlegemini&logoColor=white) ![OpenRouter](https://img.shields.io/badge/OpenRouter-6566F1?style=flat&logo=openrouter&logoColor=white)
 
-> Not affiliated with Garmin. Not medical advice.
 
 ---
 
