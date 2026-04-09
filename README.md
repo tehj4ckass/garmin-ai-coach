@@ -94,26 +94,27 @@ Then launch **`pixi run qa-chat`**, pick that run folder, and keep the conversat
 
 ## 🎯 See It In Action
 
-### 💬 Coach Chat
-
-![Coach Chat — Run auswählen](docs/screenshots/coach_chat_welcome.png)
-*Willkommen: Runs unter `data/` als Tabelle; Nummer, Ordnername oder Pfad eingeben.*
-
-![Coach Chat — Kontext geladen](docs/screenshots/coach_chat_run_selected.png)
-*Nach der Auswahl: Bestätigung mit Run-Ordner und Hinweis auf Fragen (ohne LLM-Aufruf für diesen Schritt).*
-
 ### 📊 Analysis Reports
 
+*Key Performance Indicators: training load, ACWR, HRV, recovery metrics, and body composition at a glance:*
 ![KPI Dashboard](docs/screenshots/kpi_dashboard.png)
-*Key Performance Indicators: training load, ACWR, HRV, recovery metrics, and body composition at a glance*
 
+*Deep physiological analysis: baseline profiling, crash signature detection, and current readiness assessment:*
 ![Physiology & Readiness](docs/screenshots/physiology_readiness.png)
-*Deep physiological analysis: baseline profiling, crash signature detection, and current readiness assessment*
 
 ### 📅 Training Plans
 
+*Macro-cycle season plan with race anchors, phase architecture, and periodization timeline:*
 ![Season Plan Overview](docs/screenshots/season_plan_overview.png)
-*Macro-cycle season plan with race anchors, phase architecture, and periodization timeline*
+
+### 💬 Coach Chat
+
+*Runs unter `data/` als Tabelle; Nummer, Ordnername oder Pfad eingeben:*
+![Coach Chat — Run auswählen](docs/screenshots/coach_chat_welcome.png)
+
+*Nach der Auswahl: Bestätigung mit Run-Ordner und Hinweis auf Fragen (ohne LLM-Aufruf für diesen Schritt):*
+![Coach Chat — Kontext geladen](docs/screenshots/coach_chat_run_selected.png)
+
 
 ---
 
