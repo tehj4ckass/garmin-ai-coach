@@ -14,11 +14,7 @@
 [![Powered by Chainlit](https://img.shields.io/badge/Powered%20by-Chainlit-FF4B4B?style=flat&logo=chainlit&logoColor=white)](https://github.com/Chainlit/chainlit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[![Anthropic](https://img.shields.io/badge/Anthropic-755139?style=flat&logo=anthropic&logoColor=white)](https://www.anthropic.com) 
-[![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat&logo=openai&logoColor=white)](https://openai.com) 
-[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=flat&logo=googlegemini&logoColor=white)](https://ai.google.dev) 
-[![OpenRouter](https://img.shields.io/badge/OpenRouter-6566F1?style=flat&logo=openrouter&logoColor=white)](https://openrouter.ai)
-
+![Supports](https://img.shields.io/badge/Supports-grey?style=flat) [![Anthropic](https://img.shields.io/badge/Anthropic-755139?style=flat&logo=anthropic&logoColor=white)](https://www.anthropic.com) [![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat&logo=openai&logoColor=white)](https://openai.com) [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=flat&logo=googlegemini&logoColor=white)](https://ai.google.dev) [![OpenRouter](https://img.shields.io/badge/OpenRouter-6566F1?style=flat&logo=openrouter&logoColor=white)](https://openrouter.ai)
 
 ---
 
