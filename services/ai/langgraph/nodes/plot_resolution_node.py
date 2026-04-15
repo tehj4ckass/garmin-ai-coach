@@ -4,7 +4,10 @@ from typing import Any
 
 from services.ai.langgraph.state.training_analysis_state import TrainingAnalysisState
 from services.ai.tools.plotting.plot_storage import PlotMetadata, PlotStorage
-from services.ai.tools.plotting.reference_resolver import PlotReferenceResolver
+from services.ai.tools.plotting.reference_resolver import (
+    PlotReferenceResolver,
+    repair_misnamed_plot_references,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +51,13 @@ async def plot_resolution_node(state: TrainingAnalysisState) -> dict[str, Any]:
                 created_at=datetime.fromisoformat(plot_data["created_at"]),
                 html_content=plot_data["html_content"],
                 data_summary=plot_data["data_summary"],
+            )
+
+        analysis_html, repaired_refs = repair_misnamed_plot_references(analysis_html, plot_storage)
+        if repaired_refs:
+            logger.info(
+                "Plot reference repair (single-plot fallback): %s substitution(s)",
+                repaired_refs,
             )
 
         resolver = PlotReferenceResolver(plot_storage)
@@ -95,6 +105,7 @@ async def plot_resolution_node(state: TrainingAnalysisState) -> dict[str, Any]:
                 "total_references": validation_result["total_references"],
                 "resolved_count": resolved_count,
                 "missing_plots": validation_result["missing_plots"],
+                "repaired_misnamed_refs": repaired_refs,
                 "available_plots_summary": resolver.get_plot_summary(),
             },
             "costs": [

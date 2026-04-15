@@ -7,6 +7,7 @@ from services.ai.model_config import ModelSelector
 from services.ai.utils.retry_handler import AI_ANALYSIS_CONFIG, retry_with_backoff
 
 from .node_base import extract_usage_metadata
+from .prompt_components import format_valid_plot_catalog
 from .tool_calling_helper import extract_text_content
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,8 @@ Erstelle ansprechende, funktionale HTML-Dokumente für sportliche Leistungsdaten
 - Ästhetik: Balance zwischen Schönheit und Funktion."""
 
 FORMATTER_USER_PROMPT_BASE = """Transformiere diesen Inhalt in ein schönes HTML-Dokument.
+
+{plot_catalog}
 
 ## Inhalt
 ```markdown
@@ -39,7 +42,7 @@ Gib NUR das vollständige HTML-Dokument zurück."""
 
 FORMATTER_PLOT_INSTRUCTIONS = """
 ## Diagramm-Integration
-- **Beibehalten**: Behalte `[PLOT:plot_id]`-Referenzen EXAKT so bei, wie sie geschrieben wurden.
+- **Beibehalten**: Behalte `[PLOT:…]`-Referenzen EXAKT bei — **nur** die IDs aus dem Katalog oben (falls vorhanden). Keine neuen Namen erfinden.
 - **Layout**: Behandle sie als große visuelle Blöcke (volle Breite).
 - **Abstände**: Stelle sicher, dass das CSS vertikalen Platz (~500px) für die interaktiven Diagramme vorsieht, die sie ersetzen werden."""
 
@@ -57,6 +60,12 @@ async def formatter_node(state: TrainingAnalysisState) -> dict[str, list | str]:
 
         agent_start_time = datetime.now()
 
+        plot_catalog = (
+            format_valid_plot_catalog(state.get("plot_storage_data", {}))
+            if plotting_enabled
+            else ""
+        )
+
         async def call_html_formatting():
             synthesis_result = extract_text_content(state.get("synthesis_result", ""))
 
@@ -64,6 +73,7 @@ async def formatter_node(state: TrainingAnalysisState) -> dict[str, list | str]:
                 {"role": "system", "content": FORMATTER_SYSTEM_PROMPT},
                 {"role": "user", "content": (
                     FORMATTER_USER_PROMPT_BASE.format(
+                        plot_catalog=plot_catalog,
                         synthesis_result=synthesis_result,
                         athlete_name=state.get("athlete_name", "Athlete"),
                     )

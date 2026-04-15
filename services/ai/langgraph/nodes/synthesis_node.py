@@ -6,10 +6,10 @@ from services.ai.ai_settings import AgentRole
 from services.ai.langgraph.state.training_analysis_state import TrainingAnalysisState
 from services.ai.langgraph.utils.output_helper import extract_expert_output
 from services.ai.model_config import ModelSelector
-from services.ai.tools.plotting import PlotStorage
 from services.ai.utils.retry_handler import AI_ANALYSIS_CONFIG, retry_with_backoff
 
 from .node_base import extract_usage_metadata
+from .prompt_components import format_valid_plot_catalog
 from .tool_calling_helper import handle_tool_calling_in_node
 
 logger = logging.getLogger(__name__)
@@ -28,10 +28,12 @@ Erstelle umfassende, umsetzbare Erkenntnisse durch die Synthese mehrerer Datenst
 
 SYNTHESIS_PLOT_INSTRUCTIONS = """
 ## Diagramm-Integration
-- Füge Diagramm-Referenzen als `[PLOT:plot_id]` in deinen Text ein.
+- Der Abschnitt **„Diagramme in dieser Ausführung“** im Nutzer-Prompt ist maßgeblich: verwende **nur** die dort aufgeführten `[PLOT:…]`-Strings.
+- Ignoriere abweichende oder erfundene `[PLOT:…]`-Vorkommen in den Experten-Texten.
 - Diese werden zu interaktiven Diagrammen."""
 
-SYNTHESIS_USER_PROMPT_BASE = """Synthetisiere die Expertenanalysen zu einem umfassenden Athletenbericht.
+SYNTHESIS_USER_PROMPT_BASE = """{plot_catalog}
+Synthetisiere die Expertenanalysen zu einem umfassenden Athletenbericht.
 
 ## Inputs
 ### Athlet
@@ -68,7 +70,7 @@ SYNTHESIS_USER_PROMPT_BASE = """Synthetisiere die Expertenanalysen zu einem umfa
 
 SYNTHESIS_USER_PLOT_INSTRUCTIONS = """
 ## Diagramm-Referenzen
-- Füge jede eindeutige `[PLOT:plot_id]` GENAU EINMAL ein.
+- Füge jede eindeutige `[PLOT:…]` GENAU EINMAL ein; verwende nur IDs, die bereits in den Experten-Abschnitten vorkommen.
 - Erstelle keine Duplikate von Referenzen."""
 
 
@@ -76,8 +78,12 @@ async def synthesis_node(state: TrainingAnalysisState) -> dict[str, list | str]:
     logger.info("Starting synthesis node")
 
     try:
-        plot_storage = PlotStorage(state["execution_id"])
         plotting_enabled = state.get("plotting_enabled", False)
+        plot_catalog = (
+            format_valid_plot_catalog(state.get("plot_storage_data", {}))
+            if plotting_enabled
+            else ""
+        )
 
         logger.info(
             "Synthesis node: Plotting %s - %s plot integration instructions",
@@ -96,6 +102,7 @@ async def synthesis_node(state: TrainingAnalysisState) -> dict[str, list | str]:
                     )},
                     {"role": "user", "content": (
                         SYNTHESIS_USER_PROMPT_BASE.format(
+                            plot_catalog=plot_catalog,
                             athlete_name=state["athlete_name"],
                             metrics_result=extract_expert_output(state.get("metrics_outputs"), "for_synthesis"),
                             activity_result=extract_expert_output(state.get("activity_outputs"), "for_synthesis"),
@@ -131,7 +138,6 @@ async def synthesis_node(state: TrainingAnalysisState) -> dict[str, list | str]:
                 }
             ],
             "usage_metadata": extract_usage_metadata(synthesis_result, AgentRole.SYNTHESIS, usage),
-            "available_plots": plot_storage.list_available_plots(),
         }
 
     except Exception as exc:

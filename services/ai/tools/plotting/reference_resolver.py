@@ -7,6 +7,31 @@ from .plot_storage import PlotStorage
 logger = logging.getLogger(__name__)
 
 
+def repair_misnamed_plot_references(text: str, plot_storage: PlotStorage) -> tuple[str, int]:
+    """Ersetzt ungültige [PLOT:…]-Referenzen, wenn genau ein Plot im Speicher liegt (Fallback)."""
+    keys = list(plot_storage.get_all_plots().keys())
+    if len(keys) != 1:
+        return text, 0
+    sole_id = keys[0]
+    repairs = 0
+
+    def replace_if_invalid(match: re.Match[str]) -> str:
+        nonlocal repairs
+        pid = match.group(1)
+        if pid in plot_storage.plots:
+            return match.group(0)
+        repairs += 1
+        logger.warning(
+            "Repaired invalid plot ref [PLOT:%s] -> [PLOT:%s] (single plot in run)",
+            pid,
+            sole_id,
+        )
+        return f"[PLOT:{sole_id}]"
+
+    fixed = re.sub(PlotReferenceResolver.PLOT_PATTERN, replace_if_invalid, text)
+    return fixed, repairs
+
+
 class PlotReferenceResolver:
     PLOT_PATTERN = r"\[PLOT:([^\]]+)\]"
 

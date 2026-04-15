@@ -1,10 +1,61 @@
 import pytest
 
+from services.ai.langgraph.nodes.prompt_components import format_valid_plot_catalog
 from services.ai.tools.plotting.langgraph_plotting_tool import create_plotting_tools
-from services.ai.tools.plotting.plot_storage import PlotStorage
+from services.ai.tools.plotting.plot_storage import PlotMetadata, PlotStorage
+from services.ai.tools.plotting.reference_resolver import repair_misnamed_plot_references
 
 
 class TestPlottingToolIntegration:
+    def test_format_valid_plot_catalog_lists_ids(self):
+        data = {
+            "metrics_1_001": {
+                "plot_id": "metrics_1_001",
+                "description": "ACWR",
+                "agent_name": "metrics",
+                "created_at": "2026-01-01T12:00:00",
+                "html_content": "<div/>",
+                "data_summary": "",
+            }
+        }
+        text = format_valid_plot_catalog(data)
+        assert "`[PLOT:metrics_1_001]`" in text
+        assert "ACWR" in text
+
+    def test_repair_misnamed_plot_references_single_plot(self):
+        storage = PlotStorage("exec")
+        storage.plots["metrics_99_001"] = PlotMetadata(
+            plot_id="metrics_99_001",
+            description="x",
+            agent_name="metrics",
+            created_at=__import__("datetime").datetime.now(),
+            html_content="<p/>",
+            data_summary="",
+        )
+        raw = "See [PLOT:load_acwr_tsb] here."
+        fixed, n = repair_misnamed_plot_references(raw, storage)
+        assert n == 1
+        assert "[PLOT:metrics_99_001]" in fixed
+        assert "load_acwr_tsb" not in fixed
+
+    def test_repair_skipped_when_multiple_plots(self):
+        storage = PlotStorage("exec")
+        now = __import__("datetime").datetime.now()
+        for pid in ("a_1_001", "b_2_002"):
+            storage.plots[pid] = PlotMetadata(
+                plot_id=pid,
+                description="x",
+                agent_name="m",
+                created_at=now,
+                html_content="<p/>",
+                data_summary="",
+            )
+        raw = "[PLOT:wrong]"
+        fixed, n = repair_misnamed_plot_references(raw, storage)
+        assert n == 0
+        assert fixed == raw
+
+
 
     def test_langchain_tool_creation(self):
         plot_storage = PlotStorage("test_execution")

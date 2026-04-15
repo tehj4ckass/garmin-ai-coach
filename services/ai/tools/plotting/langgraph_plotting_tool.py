@@ -104,7 +104,10 @@ class LangGraphPlottingTool:
                 return {
                     "ok": True,
                     "plot_id": plot_id,
-                    "message": f"Plot created successfully! Reference as [PLOT:{plot_id}]"
+                    "message": (
+                        f"Plot created successfully! Copy plot_id verbatim into your report as "
+                        f"[PLOT:{plot_id}] — do not rename or paraphrase this id."
+                    ),
                 }
 
             except Exception as e:
