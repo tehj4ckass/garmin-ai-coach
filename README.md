@@ -105,11 +105,11 @@ Then launch **`pixi run qa-chat`**, pick that run folder, and keep the conversat
 
 ### 💬 Coach Chat
 
-*Runs unter `data/` als Tabelle; Nummer, Ordnername oder Pfad eingeben:*
-![Coach Chat — Run auswählen](docs/screenshots/coach_chat_welcome.png)
+*Runs listed from `data/` as a table — enter a number, folder name, or full path:*
+![Coach Chat — Select a run](docs/screenshots/coach_chat_welcome.png)
 
-*Nach der Auswahl: Bestätigung mit Run-Ordner und Hinweis auf Fragen (ohne LLM-Aufruf für diesen Schritt):*
-![Coach Chat — Kontext geladen](docs/screenshots/coach_chat_run_selected.png)
+*After selection: confirmation with the run folder and prompt to start asking questions (no LLM call for this step):*
+![Coach Chat — Context loaded](docs/screenshots/coach_chat_run_selected.png)
 
 
 ---

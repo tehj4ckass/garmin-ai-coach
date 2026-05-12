@@ -65,7 +65,7 @@ dead-code-verbose = "vulture --config vulture.toml --verbose"
 coach-cli = "python cli/garmin_ai_coach_cli.py"
 coach-init = "python cli/garmin_ai_coach_cli.py --init-config"
 # Post-run Q&A (Chainlit UI; uses extraction.ai_mode from coach_config.yaml)
-qa-chat = "chainlit run cli/qa_chainlit_app.py"
+qa-chat = "python -m chainlit run cli/qa_chainlit_app.py"
 
 [environments]
 default = { solve-group = "default" }
