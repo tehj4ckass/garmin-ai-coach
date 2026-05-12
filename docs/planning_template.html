@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Training Plan · {{athlete_name}}</title>
+  <link rel="stylesheet" href="report_theme.css">
+</head>
+<body>
+
+<div class="report-container">
+
+  <!-- ─── Header ──────────────────────────────────────────── -->
+  <header class="report-header">
+    <div class="subtitle">Training Plan</div>
+    <h1>{{athlete_name}}</h1>
+    <div class="meta-row">
+      <div class="meta-item">📅 <span>{{plan_period}}</span></div>
+      <div class="meta-item">🤖 <span>{{ai_mode}}</span></div>
+      <div class="meta-item">🏅 <span>{{athlete_level}}</span></div>
+      <div class="meta-item">🎯 <span>Next Event: {{next_event}}</span></div>
+    </div>
+  </header>
+
+  <!-- ─── § 01  Season Overview ───────────────────────────── -->
+  <div class="section">
+    <div class="section-label"><span class="section-num">01</span> Season</div>
+    <h2 class="section-title">Season Plan Overview</h2>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🗓️ Periodization</div>
+          <span class="tag tag-cyan">4-week block</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Week</th><th>Focus</th><th>TSS Target</th><th>Type</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Week 1</td><td>Base + Tempo</td><td>380–420</td><td><span class="tag tag-accent">build</span></td></tr>
+            <tr><td>Week 2</td><td>Threshold</td><td>420–460</td><td><span class="tag tag-accent">build</span></td></tr>
+            <tr><td>Week 3</td><td>Peak Load</td><td>460–500</td><td><span class="tag tag-amber">overload</span></td></tr>
+            <tr><td>Week 4</td><td>Recovery</td><td>250–300</td><td><span class="tag tag-blue">recover</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🎯 Key Competitions</div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Event</th><th>Date</th><th>Priority</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Octupus Gravel Andermatt</td><td>2026-06-20</td><td><span class="tag tag-rose">A</span></td></tr>
+            <tr><td>Kitzbühler Radmarathon</td><td>2026-09-20</td><td><span class="tag tag-amber">B</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>📋 Strategy:</strong> The 4-week block follows a classic 3:1 build-recovery pattern. Weeks 1–3 progressively increase load with emphasis on sustained climbing power (key for Andermatt). Week 4 drops volume by ~40% to allow super-compensation before the next block.
+    </div>
+  </div>
+
+  <!-- ─── § 02  Week 1 Detail ─────────────────────────────── -->
+  <div class="section">
+    <div class="section-label"><span class="section-num">02</span> Week 1</div>
+    <h2 class="section-title">Week 1 — Base + Tempo</h2>
+
+    <div class="card" style="margin-bottom: var(--sp-6);">
+      <div class="card-header">
+        <div class="card-title">📊 Week Strategy</div>
+        <span class="tag tag-accent">TSS ~400</span>
+      </div>
+      <p>Focus on aerobic base with two quality sessions. Joint sessions with Dani on Tuesday and Saturday (endurance pace). Key session on Thursday (tempo intervals on road). Weekend gravel ride includes targeted climbing.</p>
+    </div>
+
+    <!-- 7-day grid -->
+    <div class="week-grid">
+
+      <!-- Monday -->
+      <div class="day-card">
+        <div class="day-label">Mon · 19.05</div>
+        <div style="display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2);">
+          <input type="checkbox" class="workout-check" name="wk1-mon" value="done">
+          <strong style="font-size: 0.9rem;">🧘 Active Recovery</strong>
+        </div>
+        <p style="font-size: 0.82rem; margin-bottom: var(--sp-2);">30 min Zone 1 spin or yoga</p>
+        <span class="tag tag-muted">optional</span>
+      </div>
+
+      <!-- Tuesday -->
+      <div class="day-card">
+        <div class="day-label">Tue · 20.05</div>
+        <div style="display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2);">
+          <input type="checkbox" class="workout-check" name="wk1-tue" value="done">
+          <strong style="font-size: 0.9rem;">🚴 Endurance Ride w/ Dani</strong>
+        </div>
+        <p style="font-size: 0.82rem; margin-bottom: var(--sp-2);">1h 30m · Road · Zone 2</p>
+        <p style="font-size: 0.78rem; color: var(--text-muted);">Cue: Cadence 85–95, conversational pace. Inntal valley loop.</p>
+        <span class="tag tag-cyan">joint session</span>
+      </div>
+
+      <!-- Wednesday -->
+      <div class="day-card">
+        <div class="day-label">Wed · 21.05</div>
+        <div style="display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2);">
+          <input type="checkbox" class="workout-check" name="wk1-wed" value="done">
+          <strong style="font-size: 0.9rem;">💪 Strength + Mobility</strong>
+        </div>
+        <p style="font-size: 0.82rem; margin-bottom: var(--sp-2);">45 min · Core & hip stability</p>
+        <span class="tag tag-muted">low cost</span>
+      </div>
+
+      <!-- Thursday -->
+      <div class="day-card key-session">
+        <div class="day-label">Thu · 22.05</div>
+        <div style="display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2);">
+          <input type="checkbox" class="workout-check" name="wk1-thu" value="done">
+          <strong style="font-size: 0.9rem;">🔥 Tempo Intervals</strong>
+        </div>
+        <p style="font-size: 0.82rem; margin-bottom: var(--sp-2);">1h 15m · Road · Z3/Z4</p>
+        <p style="font-size: 0.78rem; color: var(--text-muted);">3×12 min @ FTP 85–90%, 5 min recovery. Hill repeats on Kellerjochstraße.</p>
+        <span class="tag tag-accent">key session</span>
+      </div>
+
+      <!-- Friday -->
+      <div class="day-card">
+        <div class="day-label">Fri · 23.05</div>
+        <div style="display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2);">
+          <input type="checkbox" class="workout-check" name="wk1-fri" value="done">
+          <strong style="font-size: 0.9rem;">🧘 Rest Day</strong>
+        </div>
+        <p style="font-size: 0.82rem; margin-bottom: var(--sp-2);">Full rest or 20 min stretch</p>
+        <span class="tag tag-muted">rest</span>
+      </div>
+
+      <!-- Saturday -->
+      <div class="day-card key-session">
+        <div class="day-label">Sat · 24.05</div>
+        <div style="display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2);">
+          <input type="checkbox" class="workout-check" name="wk1-sat" value="done">
+          <strong style="font-size: 0.9rem;">🏔️ Gravel Endurance w/ Dani</strong>
+        </div>
+        <p style="font-size: 0.82rem; margin-bottom: var(--sp-2);">2h 30m · Gravel · Z2 w/ Z3 climbs</p>
+        <p style="font-size: 0.78rem; color: var(--text-muted);">Cue: Stay seated on climbs for muscular endurance. Target 1200m+.</p>
+        <div style="display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-top: var(--sp-2);">
+          <span class="tag tag-accent">key session</span>
+          <span class="tag tag-cyan">joint session</span>
+        </div>
+      </div>
+
+      <!-- Sunday -->
+      <div class="day-card">
+        <div class="day-label">Sun · 25.05</div>
+        <div style="display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2);">
+          <input type="checkbox" class="workout-check" name="wk1-sun" value="done">
+          <strong style="font-size: 0.9rem;">🚴 Easy Spin</strong>
+        </div>
+        <p style="font-size: 0.82rem; margin-bottom: var(--sp-2);">1h · Road · Zone 1–2</p>
+        <p style="font-size: 0.78rem; color: var(--text-muted);">Legs flush. No intervals. Enjoy the scenery.</p>
+        <span class="tag tag-muted">optional</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── § 03  Coaching Notes ────────────────────────────── -->
+  <div class="section">
+    <div class="section-label"><span class="section-num">03</span> Notes</div>
+    <h2 class="section-title">Coaching Notes</h2>
+
+    <div class="callout">
+      <strong>🥗 Nutrition Reminder:</strong> With your vegan diet, pay special attention to post-ride protein intake (30g within 45 min). Consider adding a B12 and iron check if fatigue increases during week 3.
+    </div>
+
+    <div class="callout callout-info">
+      <strong>📈 Progression Rule:</strong> If HRV stays above 58ms and sleep quality above 72% through week 2, increase week 3 TSS to the upper target (500). Otherwise, cap at 460.
+    </div>
+  </div>
+
+  <!-- ─── Footer ──────────────────────────────────────────── -->
+  <footer class="report-footer">
+    <p>Generated by <strong>Garmin AI Coach</strong> · {{ai_mode}} · {{analysis_date}}</p>
+    <p style="margin-top: var(--sp-2)">Adapt sessions based on how you feel — this plan is a guideline, not a mandate.</p>
+  </footer>
+
+</div>
+
+</body>
+</html>

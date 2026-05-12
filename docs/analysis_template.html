@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Performance Analysis · {{athlete_name}}</title>
+  <link rel="stylesheet" href="report_theme.css">
+</head>
+<body>
+
+<div class="report-container">
+
+  <!-- ─── Header ──────────────────────────────────────────── -->
+  <header class="report-header">
+    <div class="subtitle">Performance Analysis</div>
+    <h1>{{athlete_name}}</h1>
+    <div class="meta-row">
+      <div class="meta-item">📅 <span>{{analysis_date}}</span></div>
+      <div class="meta-item">🤖 <span>{{ai_mode}}</span></div>
+      <div class="meta-item">🏅 <span>{{athlete_level}}</span></div>
+      <div class="meta-item">📊 <span>{{activities_days}}d Activities · {{metrics_days}}d Metrics</span></div>
+    </div>
+  </header>
+
+  <!-- ─── § 01  Executive Summary ─────────────────────────── -->
+  <div class="section">
+    <div class="section-label"><span class="section-num">01</span> Overview</div>
+    <h2 class="section-title">Executive Summary</h2>
+
+    <!-- KPI Row -->
+    <div class="grid grid-4">
+      <div class="card kpi">
+        <div class="kpi-value" style="color: var(--accent)">82</div>
+        <div class="kpi-label">Readiness</div>
+        <div class="kpi-delta positive">▲ +4 vs. last week</div>
+      </div>
+      <div class="card kpi">
+        <div class="kpi-value">6.2h</div>
+        <div class="kpi-label">Training Volume</div>
+        <div class="kpi-delta negative">▼ −1.1h</div>
+      </div>
+      <div class="card kpi">
+        <div class="kpi-value">52</div>
+        <div class="kpi-label">VO₂max</div>
+        <div class="kpi-delta neutral">→ stable</div>
+      </div>
+      <div class="card kpi">
+        <div class="kpi-value" style="color: var(--cyan)">0.93</div>
+        <div class="kpi-label">ACWR</div>
+        <div class="kpi-delta positive">▲ optimal zone</div>
+      </div>
+    </div>
+
+    <!-- Key Findings -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🎯 Key Findings</div>
+        <span class="tag tag-accent">5 items</span>
+      </div>
+      <ul>
+        <li><strong>HRV recovery trend</strong> shows consistent upward trajectory over 14 days (+8.2%), suggesting good adaptation to current training load.</li>
+        <li><strong>Sleep quality</strong> averaged 78% — above baseline (72%), with 3 nights below 70% during midweek intensity block.</li>
+        <li><strong>Acute-to-chronic workload ratio</strong> at 0.93 — within the optimal 0.8–1.3 range. No overtraining risk signals.</li>
+        <li><strong>Gravel vs. road distribution:</strong> 62% road / 38% gravel. Elevation load heavily skewed toward weekend gravel sessions (avg. 1200m+ per ride).</li>
+        <li><strong>Resting heart rate</strong> stable at 48 bpm (7-day avg), consistent with aerobic base maintenance phase.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ─── § 02  Recovery & Readiness ──────────────────────── -->
+  <div class="section">
+    <div class="section-label"><span class="section-num">02</span> Recovery</div>
+    <h2 class="section-title">Recovery &amp; Readiness</h2>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">💤 Sleep Analysis</div>
+          <span class="tag tag-cyan">7-day avg</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Metric</th><th>Value</th><th>Trend</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Duration</td><td><strong>7h 12m</strong></td><td class="kpi-delta positive">▲ +18m</td></tr>
+            <tr><td>Quality Score</td><td><strong>78%</strong></td><td class="kpi-delta positive">▲ +6%</td></tr>
+            <tr><td>Deep Sleep</td><td><strong>1h 48m</strong></td><td class="kpi-delta neutral">→</td></tr>
+            <tr><td>REM Sleep</td><td><strong>1h 32m</strong></td><td class="kpi-delta positive">▲ +12m</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">❤️ HRV & Resting HR</div>
+          <span class="tag tag-accent">14-day</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Metric</th><th>Value</th><th>Trend</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>HRV (RMSSD)</td><td><strong>62 ms</strong></td><td class="kpi-delta positive">▲ +8.2%</td></tr>
+            <tr><td>HRV Baseline</td><td><strong>57 ms</strong></td><td class="kpi-delta neutral">→ 90d avg</td></tr>
+            <tr><td>Resting HR</td><td><strong>48 bpm</strong></td><td class="kpi-delta neutral">→ stable</td></tr>
+            <tr><td>HR Recovery (1 min)</td><td><strong>38 bpm</strong></td><td class="kpi-delta positive">▲ improving</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>💡 Interpretation:</strong> Recovery signals are consistently positive. HRV is tracking above baseline, sleep quality is improving, and resting HR remains stable. The organism appears well-adapted to the current load — room for a controlled intensity increase.
+    </div>
+  </div>
+
+  <!-- ─── § 03  Training Load ─────────────────────────────── -->
+  <div class="section">
+    <div class="section-label"><span class="section-num">03</span> Load</div>
+    <h2 class="section-title">Training Load &amp; Progression</h2>
+
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📊 Weekly Summary</div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Metric</th><th>This Week</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Total Duration</td><td><strong>6h 12m</strong></td></tr>
+            <tr><td>Total Distance</td><td><strong>184 km</strong></td></tr>
+            <tr><td>Elevation Gain</td><td><strong>2,840 m</strong></td></tr>
+            <tr><td>TSS (est.)</td><td><strong>412</strong></td></tr>
+            <tr><td>Sessions</td><td><strong>5</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🚴 Activity Breakdown</div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Type</th><th>Sessions</th><th>Hours</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>🏔️ Road</td><td>3</td><td>3h 48m</td></tr>
+            <tr><td>🌲 Gravel</td><td>2</td><td>2h 24m</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚖️ Load Ratios</div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Metric</th><th>Value</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>ACWR</td><td><strong>0.93</strong></td><td><span class="tag tag-accent">optimal</span></td></tr>
+            <tr><td>Monotony</td><td><strong>1.4</strong></td><td><span class="tag tag-accent">good</span></td></tr>
+            <tr><td>Strain</td><td><strong>577</strong></td><td><span class="tag tag-amber">moderate</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── § 04  Red Flags ─────────────────────────────────── -->
+  <div class="section">
+    <div class="section-label"><span class="section-num">04</span> Risks</div>
+    <h2 class="section-title">Red Flags &amp; Warnings</h2>
+
+    <div class="callout callout-warn">
+      <strong>⚠️ Midweek sleep dip:</strong> Three consecutive nights with quality below 70% (Tue–Thu). Consider adjusting intensity placement relative to sleep patterns. Currently, high-intensity sessions fall on these days.
+    </div>
+
+    <div class="callout callout-info">
+      <strong>ℹ️ Elevation load asymmetry:</strong> 87% of total elevation gain concentrated in Saturday + Sunday gravel rides. While not problematic per se, this creates a pronounced musculoskeletal stress peak. Consider distributing some climbing volume midweek.
+    </div>
+  </div>
+
+  <!-- ─── § 05  Recommendations ───────────────────────────── -->
+  <div class="section">
+    <div class="section-label"><span class="section-num">05</span> Action</div>
+    <h2 class="section-title">Next Steps</h2>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🧪 Experiments</div>
+          <span class="tag tag-accent">this week</span>
+        </div>
+        <ol>
+          <li>Move one hill interval session to Wednesday to balance elevation load distribution.</li>
+          <li>Add 15 min Z1 cool-down to Tue/Thu sessions to test if sleep quality stabilizes.</li>
+          <li>Track morning HRV for 5 more days — if trend holds above 60ms, increase weekly TSS by ~8%.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📐 Checkpoints</div>
+          <span class="tag tag-blue">measure</span>
+        </div>
+        <ol>
+          <li>HRV 7-day average → target: sustain > 58ms.</li>
+          <li>Sleep quality → target: no more than 1 night/week below 70%.</li>
+          <li>ACWR → keep in 0.8–1.2 band during next load cycle.</li>
+          <li>Resting HR → flag if it rises > 52 bpm.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Footer ──────────────────────────────────────────── -->
+  <footer class="report-footer">
+    <p>Generated by <strong>Garmin AI Coach</strong> · {{ai_mode}} · {{analysis_date}}</p>
+    <p style="margin-top: var(--sp-2)">This report is for informational purposes only — not a medical diagnosis.</p>
+  </footer>
+
+</div>
+
+</body>
+</html>

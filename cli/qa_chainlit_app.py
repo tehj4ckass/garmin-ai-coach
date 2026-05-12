@@ -149,8 +149,15 @@ def _technical_meta_block() -> str:
 ## Technische Meta (bei Meta-Fragen verbindlich nutzen)
 - **AI_MODE:** `{get_ai_mode_label()}`
 - **Konfiguriertes Synthese-Modell:** `{get_synthesis_model_id()}`
+- **Athleten-Level:** `{get_athlete_level_label()}`
 - **Q&A-Absicherung:** Stream-Timeout ca. {QA_STREAM_TIMEOUT_SEC:.0f}s; Output-Tokens typisch capped auf ca. {QA_MAX_OUTPUT_TOKENS} (siehe Server).
 """
+
+
+def _level_overlay_block() -> str:
+    """Inject athlete-level coaching overlay into Q&A system prompt."""
+    from services.ai.langgraph.nodes.prompt_components import get_level_context
+    return get_level_context(get_athlete_level_label())
 
 
 def _project_data_root() -> Path:
@@ -186,6 +193,19 @@ def apply_coach_config_ai_mode() -> str:
         if m == "pro":
             m = "gemini_pro"
         os.environ["AI_MODE"] = m
+    # Athlete level from coach_config.yaml or env override
+    if cfg_path.exists():
+        doc_for_level = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+        level = (doc_for_level.get("athlete") or {}).get("level")
+        if level is not None:
+            lvl = str(level).strip().lower()
+            if lvl in ("beginner", "advanced", "elite"):
+                os.environ["ATHLETE_LEVEL"] = lvl
+    level_override = (os.environ.get("QA_ATHLETE_LEVEL") or "").strip()
+    if level_override:
+        lvl = level_override.lower()
+        if lvl in ("beginner", "advanced", "elite"):
+            os.environ["ATHLETE_LEVEL"] = lvl
     reload_config()
     ai_settings.reload()
     return get_ai_mode_label()
@@ -199,6 +219,12 @@ def get_ai_mode_label() -> str:
 
 def get_synthesis_model_id() -> str:
     return ai_settings.get_model_for_role(AgentRole.SYNTHESIS)
+
+
+def get_athlete_level_label() -> str:
+    from core.config import get_config
+
+    return get_config().athlete_level.value
 
 
 def _build_qa_llm():
@@ -368,7 +394,7 @@ async def on_chat_start() -> None:
     lines = [
         "### Garmin AI Coach · Q&A",
         "",
-        f"**AI_MODE:** `{mode}` · **Modell (Synthese):** `{model}`",
+        f"**AI_MODE:** `{mode}` · **Modell (Synthese):** `{model}` · **Level:** `{get_athlete_level_label()}`",
     ]
     if (os.environ.get("QA_AI_MODE") or "").strip():
         lines.append(
@@ -549,6 +575,7 @@ async def on_message(message: cl.Message) -> None:
     llm = _build_qa_llm()
     sys_content = (
         SYSTEM_PROMPT
+        + _level_overlay_block()
         + _technical_meta_block()
         + "\n\n## Artefakte dieses Runs\n\n"
         + context_pack

@@ -24,6 +24,14 @@ class AIMode(Enum):
     OPENAI = "openai"
 
 
+class AthleteLevel(Enum):
+    """Coaching intensity / detail level — adjusts prompt tone and analysis depth."""
+
+    BEGINNER = "beginner"    # Hobbysportler: ermutigend, einfach, wenig Fachjargon
+    ADVANCED = "advanced"    # Ambitionierter Amateur: sachlich-coach, volle KPIs
+    ELITE = "elite"          # Leistungssport: kritisch, maximal detailliert
+
+
 class RunType(Enum):
     """Workflow scope: full analysis+planning vs analysis-only (no planning LLM branch)."""
 
@@ -41,6 +49,7 @@ class Config:
 
     ai_mode: AIMode = AIMode.STANDARD
     run_type: RunType = RunType.FULL
+    athlete_level: AthleteLevel = AthleteLevel.ADVANCED
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -67,6 +76,13 @@ class Config:
             run_type = RunType.FULL
             logger.info("Warning: Invalid RUN_TYPE '%s', using %s", run_type_str, run_type.value)
 
+        athlete_level_str = os.getenv("ATHLETE_LEVEL", "advanced").lower().strip()
+        try:
+            athlete_level = AthleteLevel(athlete_level_str)
+        except ValueError:
+            athlete_level = AthleteLevel.ADVANCED
+            logger.info("Warning: Invalid ATHLETE_LEVEL '%s', using %s", athlete_level_str, athlete_level.value)
+
         if anthropic_api_key and not anthropic_api_key.startswith(("sk-ant-api03-", "sk-ant-")):
             raise ValueError("Invalid ANTHROPIC_API_KEY format")
 
@@ -77,6 +93,7 @@ class Config:
             anthropic_api_key=anthropic_api_key,
             ai_mode=ai_mode,
             run_type=run_type,
+            athlete_level=athlete_level,
             openai_api_key=openai_api_key,
             deepseek_api_key=deepseek_api_key,
             google_api_key=google_api_key,

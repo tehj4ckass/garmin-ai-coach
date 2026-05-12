@@ -1,0 +1,499 @@
+/* ============================================================
+   Garmin AI Coach — Report Theme
+   Design tokens extracted from docs/Performance Report.html
+   ============================================================ */
+
+/* ── 1. Design Tokens ──────────────────────────────────────── */
+:root {
+  /* Background layers */
+  --bg-base:       #07090c;
+  --bg-card:       #0d1117;
+  --bg-card-hover: #111820;
+  --bg-elevated:   #161b22;
+  --bg-inset:      #0a0e13;
+
+  /* Borders & tracks */
+  --border:        #1f2731;
+  --border-accent: #2d3a47;
+  --ring-track:    #1f2731;
+
+  /* Accent palette */
+  --accent:        #b5ff3a;
+  --accent-dim:    rgba(181, 255, 58, 0.15);
+  --accent-glow:   rgba(181, 255, 58, 0.5);
+  --cyan:          #3ae8ff;
+  --cyan-dim:      rgba(58, 232, 255, 0.15);
+  --amber:         #ffb03a;
+  --amber-dim:     rgba(255, 176, 58, 0.15);
+  --rose:          #ff5a7e;
+  --rose-dim:      rgba(255, 90, 126, 0.15);
+  --blue:          #5a9fff;
+  --blue-dim:      rgba(90, 159, 255, 0.15);
+
+  /* Text */
+  --text-primary:   #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted:     #6b7888;
+  --text-accent:    var(--accent);
+
+  /* Typography */
+  --font-sans:  'Inter', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:  'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+  --font-heading: 'Geist', var(--font-sans);
+
+  /* Sizing */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  18px;
+
+  /* Shadows */
+  --shadow-card:     0 1px 3px rgba(0,0,0,0.24), 0 0 0 1px var(--border);
+  --shadow-elevated: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 1px var(--border);
+  --shadow-glow:     0 0 20px var(--accent-glow);
+
+  /* Spacing scale */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+}
+
+/* ── 2. Google Fonts (Inter + JetBrains Mono) ──────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ── 3. Reset & Base ───────────────────────────────────────── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.65;
+  min-height: 100vh;
+}
+
+/* ── 4. Typography ─────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+h1 { font-size: 2.2rem; margin-bottom: var(--sp-6); }
+h2 { font-size: 1.6rem; margin-bottom: var(--sp-5); }
+h3 { font-size: 1.2rem; margin-bottom: var(--sp-4); }
+h4 { font-size: 1.05rem; margin-bottom: var(--sp-3); }
+
+p  { margin-bottom: var(--sp-4); color: var(--text-secondary); }
+
+strong { color: var(--text-primary); font-weight: 600; }
+em     { color: var(--text-muted); font-style: italic; }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+a:hover { opacity: 0.8; }
+
+code, .mono {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+
+/* ── 5. Section Layout ─────────────────────────────────────── */
+.report-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--sp-8) var(--sp-6);
+}
+
+.report-header {
+  padding: var(--sp-10) 0 var(--sp-8);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--sp-10);
+}
+
+.report-header h1 {
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.report-header .subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: var(--sp-2);
+}
+
+.report-header .meta-row {
+  display: flex;
+  gap: var(--sp-6);
+  margin-top: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.report-header .meta-item {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.report-header .meta-item span {
+  color: var(--text-secondary);
+}
+
+/* Section dividers (§ 01 Readiness, etc.) */
+.section {
+  margin-bottom: var(--sp-12);
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--sp-2);
+}
+.section-label .section-num {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: var(--sp-6);
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── 6. Cards ──────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-6);
+  margin-bottom: var(--sp-5);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-card);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--sp-4);
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* ── 7. Grid Helpers ───────────────────────────────────────── */
+.grid {
+  display: grid;
+  gap: var(--sp-5);
+}
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 768px) {
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── 8. Tags / Badges ──────────────────────────────────────── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  line-height: 1.4;
+}
+
+.tag-accent  { background: var(--accent-dim); color: var(--accent); }
+.tag-cyan    { background: var(--cyan-dim);   color: var(--cyan);   }
+.tag-amber   { background: var(--amber-dim);  color: var(--amber);  }
+.tag-rose    { background: var(--rose-dim);   color: var(--rose);   }
+.tag-blue    { background: var(--blue-dim);   color: var(--blue);   }
+.tag-muted   { background: rgba(107,120,136,0.12); color: var(--text-muted); }
+
+/* ── 9. KPI / Metric Blocks ────────────────────────────────── */
+.kpi {
+  text-align: center;
+  padding: var(--sp-5);
+}
+.kpi-value {
+  font-family: var(--font-heading);
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+.kpi-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: var(--sp-2);
+}
+.kpi-delta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  margin-top: var(--sp-1);
+}
+.kpi-delta.positive { color: var(--accent); }
+.kpi-delta.negative { color: var(--rose); }
+.kpi-delta.neutral  { color: var(--text-muted); }
+
+/* ── 10. Confidence Indicator ──────────────────────────────── */
+.confidence {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+.confidence::before {
+  content: 'CONF ';
+  opacity: 0.6;
+}
+
+/* ── 11. Data Tables ───────────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.88rem;
+}
+.data-table th {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: left;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid rgba(31,39,49,0.5);
+  color: var(--text-secondary);
+}
+.data-table tr:hover td {
+  background: var(--bg-card-hover);
+}
+
+/* ── 12. Lists ─────────────────────────────────────────────── */
+ul, ol {
+  padding-left: var(--sp-6);
+  margin-bottom: var(--sp-4);
+  color: var(--text-secondary);
+}
+li {
+  margin-bottom: var(--sp-2);
+  line-height: 1.6;
+}
+li::marker {
+  color: var(--accent);
+}
+
+/* ── 13. Alerts / Callouts ─────────────────────────────────── */
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-dim);
+  padding: var(--sp-4) var(--sp-5);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  margin-bottom: var(--sp-5);
+  font-size: 0.92rem;
+}
+.callout.callout-warn {
+  border-left-color: var(--amber);
+  background: var(--amber-dim);
+}
+.callout.callout-danger {
+  border-left-color: var(--rose);
+  background: var(--rose-dim);
+}
+.callout.callout-info {
+  border-left-color: var(--cyan);
+  background: var(--cyan-dim);
+}
+
+/* ── 14. Progress Rings (CSS-only) ─────────────────────────── */
+.ring-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ring-container svg {
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 0 10px var(--accent-glow));
+}
+.ring-container .ring-track {
+  fill: none;
+  stroke: var(--ring-track);
+}
+.ring-container .ring-value {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+}
+.ring-label {
+  position: absolute;
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ── 15. Horizontal Rule ───────────────────────────────────── */
+hr {
+  border: none;
+  height: 1px;
+  background: var(--border);
+  margin: var(--sp-8) 0;
+}
+
+/* ── 16. Footer ────────────────────────────────────────────── */
+.report-footer {
+  text-align: center;
+  padding: var(--sp-10) 0 var(--sp-6);
+  border-top: 1px solid var(--border);
+  margin-top: var(--sp-12);
+}
+.report-footer p {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+}
+
+/* ── 17. Print Styles ──────────────────────────────────────── */
+@media print {
+  body { background: #fff; color: #1a1a1a; }
+  .card { border: 1px solid #ddd; }
+  .tag  { border: 1px solid currentColor; background: transparent; }
+  h1, h2, h3, h4, strong { color: #1a1a1a; }
+  p, li, td { color: #333; }
+}
+
+/* ── 18. Checkbox Styles (Planning) ────────────────────────── */
+.workout-check {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-accent);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.workout-check:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='%2307090c' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13.5 4.5l-7 7L3 8'stroke='%2307090c'stroke-width='2.5'stroke-linecap='round'stroke-linejoin='round'fill='none'/%3E%3C/svg%3E");
+  background-size: 14px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* ── 19. Weekly Grid (Planning) ────────────────────────────── */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--sp-3);
+}
+@media (max-width: 900px) {
+  .week-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 500px) {
+  .week-grid { grid-template-columns: 1fr; }
+}
+
+.day-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-4);
+  min-height: 160px;
+  transition: border-color 0.2s;
+}
+.day-card:hover {
+  border-color: var(--border-accent);
+}
+.day-card.today {
+  border-color: var(--cyan);
+}
+.day-card.key-session {
+  border-color: var(--accent);
+}
+
+.day-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--sp-2);
+}
+
+/* ── 20. Animations ────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.section {
+  animation: fade-in 0.4s ease both;
+}
+.section:nth-child(2) { animation-delay: 0.05s; }
+.section:nth-child(3) { animation-delay: 0.10s; }
+.section:nth-child(4) { animation-delay: 0.15s; }
+.section:nth-child(5) { animation-delay: 0.20s; }
+.section:nth-child(6) { animation-delay: 0.25s; }

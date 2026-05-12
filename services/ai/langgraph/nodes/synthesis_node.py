@@ -9,7 +9,7 @@ from services.ai.model_config import ModelSelector
 from services.ai.utils.retry_handler import AI_ANALYSIS_CONFIG, retry_with_backoff
 
 from .node_base import extract_usage_metadata
-from .prompt_components import format_valid_plot_catalog
+from .prompt_components import format_valid_plot_catalog, get_level_context
 from .tool_calling_helper import handle_tool_calling_in_node
 
 logger = logging.getLogger(__name__)
@@ -98,7 +98,9 @@ async def synthesis_node(state: TrainingAnalysisState) -> dict[str, list | str]:
                 llm_with_tools=ModelSelector.get_llm(AgentRole.SYNTHESIS).bind_tools([]),
                 messages=[
                     {"role": "system", "content": (
-                        SYNTHESIS_SYSTEM_PROMPT_BASE + (SYNTHESIS_PLOT_INSTRUCTIONS if plotting_enabled else "")
+                        SYNTHESIS_SYSTEM_PROMPT_BASE
+                        + get_level_context(state.get("athlete_level", "advanced"))
+                        + (SYNTHESIS_PLOT_INSTRUCTIONS if plotting_enabled else "")
                     )},
                     {"role": "user", "content": (
                         SYNTHESIS_USER_PROMPT_BASE.format(

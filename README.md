@@ -38,12 +38,14 @@ pixi run qa-chat
 
 This repo keeps the same **CLI-first, LangGraph multi-agent** design as upstream, with a few practical differences:
 
-| Focus | What’s different here |
+| Focus | What's different here |
 |--------|----------------------|
 | **Coach Chat** (*talk to your training data*) | **Browser Q&A** (`pixi run qa-chat`) on a finished run — same model tier as the pipeline, conversation grounded in saved artifacts. See section above and [`cli/qa_chainlit_app.py`](cli/qa_chainlit_app.py). |
+| **Athlete Level** | 3-tier coaching intensity via `athlete.level` in YAML: **`beginner`** (encouraging, simple language, few KPIs) → **`advanced`** (balanced coach tone, full analysis — default) → **`elite`** (critical, data-driven, maximum detail). Adjusts tone, metric depth, and recommendation style across all experts, planners, synthesis, and Coach Chat. |
 | **Language (German)** | **System prompts, agent instructions, and the written reports** (`analysis.html`, `planning.html`, HITL console text in German) target **German** output. Upstream is largely English-oriented; your `context.*` fields in YAML can still be written in any language, but the **default coaching voice** is German. |
 | **Models** | Tiered **`extraction.ai_mode`** from cheap/fast to stronger/pricier: `development` (Gemini Flash) → `cost_effective` (Haiku) → `standard` (Claude 4) → `gemini_pro` → `openai` (`gpt-4o`). Each tier uses **direct provider APIs** where possible, with optional OpenRouter fallback — see [`services/ai/ai_settings.py`](services/ai/ai_settings.py). |
 | **`run_type`** | `full` = full pipeline (**analysis + planning**, `analysis.html` + `planning.html`). `light` = **analysis only** (`analysis.html`); the entire **planning branch** is skipped (faster/cheaper). Set `extraction.run_type` in YAML; the CLI exports `RUN_TYPE` the same way it does `AI_MODE`. |
+| **Report Design System** | Both `analysis.html` and `planning.html` share a **single CSS design system** ([`docs/report_theme.css`](docs/report_theme.css)) — dark mode, lime accent (`#b5ff3a`), Inter/JetBrains Mono typography, glassmorphic cards. The CSS is injected into the formatter prompts so every run produces **visually consistent** reports. Reference templates: [`analysis_template.html`](docs/analysis_template.html), [`planning_template.html`](docs/planning_template.html). |
 
 **Other tweaks vs. upstream:** **per-run output folders** (`<email>__<ai_mode>__<run_type>__<date>__<time>/`), **clearer cost reporting** (`total_cost_usd` may be `null` with `cost_calculable`), **more resilient graphs** when expert JSON is missing (placeholders instead of hard failure). Put secrets (**API keys, Garmin password**) in **`.env`**; run parameters in **`coach_config.yaml`** — see [`cli/README.md`](cli/README.md).
 
@@ -82,6 +84,7 @@ Then launch **`pixi run qa-chat`**, pick that run folder, and keep the conversat
 - Physiology & readiness: baseline profiling + crash signature detection
 - Actionable recommendations grouped by domain (load, running, cycling, recovery)
 - Season strategy (typically 12–24 weeks) + compact 4-week plan (28 days)
+- **Consistent report design** — shared dark-mode CSS theme across all HTML outputs ([`docs/report_theme.css`](docs/report_theme.css))
 - Optional: HITL questions (`hitl_enabled: true`)
 - Optional: competition import from Outside (BikeReg/RunReg/TriReg/SkiReg)
 - Optional: LangSmith tracing + cost tracking (`LANGSMITH_API_KEY`)
@@ -93,15 +96,21 @@ Then launch **`pixi run qa-chat`**, pick that run folder, and keep the conversat
 ### 📊 Analysis Reports
 
 *Key Performance Indicators: training load, ACWR, HRV, recovery metrics, and body composition at a glance:*
-![KPI Dashboard](docs/screenshots/kpi_dashboard.png)
+![KPI Dashboard](docs/screenshots/dashboard1.png)
 
 *Deep physiological analysis: baseline profiling, crash signature detection, and current readiness assessment:*
-![Physiology & Readiness](docs/screenshots/physiology_readiness.png)
+![Physiology & Readiness](docs/screenshots/dashboard2.png)
+
+*Actionable recommendations grouped by domain (load, running, cycling, recovery):*
+![Actionable Recommendations](docs/screenshots/dashboard3.png)
 
 ### 📅 Training Plans
 
 *Macro-cycle season plan with race anchors, phase architecture, and periodization timeline:*
-![Season Plan Overview](docs/screenshots/season_plan_overview.png)
+![Season Plan Overview](docs/screenshots/season_plan1.png)
+
+*Detailed 4-week tactical plan with daily session assignments and structured load balancing:*
+![Weekly Planner](docs/screenshots/season_plan2.png)
 
 ### 💬 Coach Chat
 
@@ -131,6 +140,7 @@ flowchart LR
 Docs:
 
 - CLI usage: [`cli/README.md`](cli/README.md)
+- Report design system: [`docs/report_theme.css`](docs/report_theme.css) · [`analysis_template.html`](docs/analysis_template.html) · [`planning_template.html`](docs/planning_template.html)
 - Full architecture diagram: [`agents_docs/langgraph_architecture_diagram.mmd`](agents_docs/langgraph_architecture_diagram.mmd)
 - Tech stack & internals: [`agents_docs/techStack.md`](agents_docs/techStack.md)
 
@@ -149,6 +159,7 @@ Minimal example:
 athlete:
   name: "Your Name"
   email: "you@example.com"
+  level: "advanced"         # beginner | advanced | elite — coaching intensity
 
 context:
   analysis: "Recovering from injury; focus on base building"

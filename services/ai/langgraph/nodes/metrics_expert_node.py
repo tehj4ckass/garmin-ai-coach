@@ -20,6 +20,7 @@ from .node_base import (
 )
 from .prompt_components import (
     get_hitl_instructions,
+    get_level_context,
     get_plotting_instructions,
     get_workflow_context,
 )
@@ -130,6 +131,7 @@ async def metrics_expert_node(state: TrainingAnalysisState) -> dict[str, list | 
 
     system_prompt = (
         get_workflow_context("metrics")
+        + get_level_context(state.get("athlete_level", "advanced"))
         + METRICS_SYSTEM_PROMPT_BASE
         + (get_plotting_instructions("metrics") if plotting_enabled else "")
         + (get_hitl_instructions("metrics") if hitl_enabled else "")

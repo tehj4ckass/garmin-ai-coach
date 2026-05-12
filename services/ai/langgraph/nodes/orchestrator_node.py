@@ -87,15 +87,15 @@ class MasterOrchestrator:
                 if state.get("skip_synthesis", False):
                     if is_light:
                         logger.warning(
-                            "skip_synthesis=True wird bei run_type=light ignoriert "
-                            "(Synthese ist für analysis.html erforderlich)."
+                            "skip_synthesis=True is ignored for run_type=light "
+                            "(synthesis is required for analysis.html)."
                         )
-                        logger.info("MasterOrchestrator: Light-Run, nur Synthese (kein Planning-Zweig)")
+                        logger.info("MasterOrchestrator: Light run, synthesis only (no planning branch)")
                         return Command(goto=["synthesis"])
                     logger.info("MasterOrchestrator: skip_synthesis=True, proceeding directly to season_planner")
                     return Command(goto="season_planner", update={"synthesis_complete": True})
                 if is_light:
-                    logger.info("MasterOrchestrator: Light-Run, nur Synthese (kein Planning-Zweig)")
+                    logger.info("MasterOrchestrator: Light run, synthesis only (no planning branch)")
                     return Command(goto=["synthesis"])
                 logger.info("MasterOrchestrator: No questions found, proceeding to synthesis and season_planner")
                 return Command(goto=["synthesis", "season_planner"])

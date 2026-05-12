@@ -17,7 +17,7 @@ from .node_base import (
     extract_usage_metadata,
     log_node_completion,
 )
-from .prompt_components import get_hitl_instructions, get_workflow_context
+from .prompt_components import get_hitl_instructions, get_level_context, get_workflow_context
 from .tool_calling_helper import handle_tool_calling_in_node
 
 logger = logging.getLogger(__name__)
@@ -95,6 +95,7 @@ async def weekly_planner_node(state: TrainingAnalysisState) -> dict[str, list | 
 
     system_prompt = (
         get_workflow_context("weekly_planner")
+        + get_level_context(state.get("athlete_level", "advanced"))
         + WEEKLY_PLANNER_SYSTEM_PROMPT
         + (get_hitl_instructions("weekly_planner") if hitl_enabled else "")
         + WEEKLY_PLANNER_FINAL_CHECKLIST

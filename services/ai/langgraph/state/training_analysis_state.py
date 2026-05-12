@@ -39,6 +39,7 @@ class TrainingAnalysisState(MessagesState):
     hitl_enabled: bool
     skip_synthesis: bool
     run_type: str  # "full" | "light" — light skips planning branch (season/weekly/plan HTML)
+    athlete_level: str  # "beginner" | "advanced" | "elite" — coaching intensity
 
     metrics_summary: str | None
     physiology_summary: str | None
@@ -93,6 +94,7 @@ def create_initial_state(
     hitl_enabled: bool = True,
     skip_synthesis: bool = False,
     run_type: str = "full",
+    athlete_level: str = "advanced",
 ) -> TrainingAnalysisState:
     return TrainingAnalysisState(
         user_id=user_id,
@@ -108,6 +110,7 @@ def create_initial_state(
         hitl_enabled=hitl_enabled,
         skip_synthesis=skip_synthesis,
         run_type=run_type if run_type in ("full", "light") else "full",
+        athlete_level=athlete_level if athlete_level in ("beginner", "advanced", "elite") else "advanced",
         execution_id=execution_id,
         metrics_summary=None,
         physiology_summary=None,

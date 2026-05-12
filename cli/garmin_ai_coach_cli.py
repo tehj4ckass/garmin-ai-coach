@@ -35,12 +35,12 @@ def _parse_log_level(name: str) -> int:
     level = mapping.get(name.strip().upper())
     if level is not None:
         return level
-    logging.getLogger(__name__).warning("Unbekanntes log level '%s', verwende INFO", name)
+    logging.getLogger(__name__).warning("Unknown log level '%s', falling back to INFO", name)
     return logging.INFO
 
 
 def _apply_cli_logging(config_parser: "ConfigParser") -> None:
-    """Root-Logger für coach-cli: logging.level aus YAML, sonst LOG_LEVEL aus .env, sonst INFO."""
+    """Root logger for coach-cli: logging.level from YAML, then LOG_LEVEL from .env, then INFO."""
     raw = config_parser.get_log_level_name()
     if not raw:
         raw = (os.environ.get("LOG_LEVEL") or "").strip()
@@ -49,7 +49,7 @@ def _apply_cli_logging(config_parser: "ConfigParser") -> None:
     else:
         level = _parse_log_level(raw)
     logging.basicConfig(format=_LOG_FORMAT, level=level, force=True)
-    logging.getLogger(__name__).debug("CLI-Log-Level: %s", logging.getLevelName(level))
+    logging.getLogger(__name__).debug("CLI log level: %s", logging.getLevelName(level))
 
 
 logging.basicConfig(format=_LOG_FORMAT, level=logging.INFO)
@@ -82,7 +82,7 @@ class ConfigParser:
             email = (self.config.get("athlete", {}).get("email") or "").strip()
         if not email:
             raise ValueError(
-                "Garmin-E-Mail fehlt: GARMIN_EMAIL in der .env setzen oder athlete.email in der Config."
+                "Garmin email missing: set GARMIN_EMAIL in .env or athlete.email in config."
             )
         return name, email
 
@@ -106,6 +106,14 @@ class ConfigParser:
             "long_term_range": self.config.get("extraction", {}).get("long_term_range", 360),
             "long_term_interval": self.config.get("extraction", {}).get("long_term_interval", 7),
         }
+
+    def get_athlete_level(self) -> str:
+        """Read athlete.level from YAML (beginner/advanced/elite), default: advanced."""
+        raw = str(self.config.get("athlete", {}).get("level", "advanced")).strip().lower()
+        if raw in ("beginner", "advanced", "elite"):
+            return raw
+        logger.warning("Invalid athlete.level '%s', falling back to 'advanced'", raw)
+        return "advanced"
 
     def get_competitions(self) -> list[dict[str, Any]]:
         competitions = self.config.get("competitions", [])
@@ -137,7 +145,7 @@ class ConfigParser:
         yaml_pw = (self.config.get("credentials", {}).get("password") or "").strip()
         if yaml_pw:
             logger.debug(
-                "Garmin-Passwort aus der Config-Datei; für getrennte Geheimnisse GARMIN_PASSWORD in .env bevorzugen."
+                "Garmin password read from config file; prefer GARMIN_PASSWORD in .env for secret separation."
             )
             return yaml_pw
         return getpass.getpass("Enter Garmin Connect password: ")
@@ -263,7 +271,7 @@ async def run_analysis_from_config(config_path: Path) -> None:
     _run_type_raw = str(extraction_settings.get("run_type", "full")).lower()
     if _run_type_raw not in ("full", "light"):
         logger.warning(
-            "Ungültiger extraction.run_type '%s', verwende 'full'",
+            "Invalid extraction.run_type '%s', falling back to 'full'",
             extraction_settings.get("run_type"),
         )
         _run_type_raw = "full"
@@ -276,8 +284,8 @@ async def run_analysis_from_config(config_path: Path) -> None:
 
     base_output_dir = config_parser.get_output_directory()
 
-    logger.info("Starte Analyse für %s", athlete_name)
-    logger.info("Ausgabeverzeichnis (Basis): %s", base_output_dir)
+    logger.info("Starting analysis for %s", athlete_name)
+    logger.info("Output directory (base): %s", base_output_dir)
 
     password = config_parser.get_password()
 
@@ -285,13 +293,17 @@ async def run_analysis_from_config(config_path: Path) -> None:
     os.environ["AI_MODE"] = "gemini_pro" if _ai_raw == "pro" else _ai_raw
     os.environ["RUN_TYPE"] = extraction_settings["run_type"]
 
-    # Reload config and settings to pick up the new AI_MODE / RUN_TYPE
+    athlete_level = config_parser.get_athlete_level()
+    os.environ["ATHLETE_LEVEL"] = athlete_level
+
+    # Reload config and settings to pick up the new AI_MODE / RUN_TYPE / ATHLETE_LEVEL
     reload_config()
     ai_settings.reload()
 
     representative_model = ai_settings.get_model_for_role(AgentRole.SUMMARIZER)
-    logger.info("AI-Modus: %s (%s)", os.environ["AI_MODE"], representative_model)
-    logger.info("Run-Typ: %s (full = Analyse+Planung, light = nur Analyse/analysis.html)", os.environ["RUN_TYPE"])
+    logger.info("AI mode: %s (%s)", os.environ["AI_MODE"], representative_model)
+    logger.info("Run type: %s (full = analysis+planning, light = analysis only/analysis.html)", os.environ["RUN_TYPE"])
+    logger.info("Athlete level: %s", athlete_level)
 
     now = datetime.now()
     run_folder = (
@@ -302,12 +314,12 @@ async def run_analysis_from_config(config_path: Path) -> None:
         f"{now.strftime('%H-%M-%S')}"
     )
     output_dir = base_output_dir / run_folder
-    logger.info("Ausgabeverzeichnis (Run): %s", output_dir)
+    logger.info("Output directory (run): %s", output_dir)
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
     try:
-        logger.info("Extrahiere Garmin Connect Daten...")
+        logger.info("Extracting Garmin Connect data...")
         extractor = TriathlonCoachDataExtractor(email, password)
 
         extraction_config = ExtractionConfig(
@@ -321,16 +333,16 @@ async def run_analysis_from_config(config_path: Path) -> None:
         )
 
         garmin_data = extractor.extract_data(extraction_config)
-        logger.info("Datenextraktion abgeschlossen")
+        logger.info("Data extraction complete")
 
         plotting_enabled = extraction_settings.get("enable_plotting", False)
         hitl_enabled = extraction_settings.get("hitl_enabled", True)
         skip_synthesis = extraction_settings.get("skip_synthesis", False)
         run_type = extraction_settings["run_type"]
 
-        logger.info("Plotting aktiviert: %s", plotting_enabled)
-        logger.info("HITL aktiviert: %s", hitl_enabled)
-        logger.info("Synthese überspringen: %s", skip_synthesis)
+        logger.info("Plotting enabled: %s", plotting_enabled)
+        logger.info("HITL enabled: %s", hitl_enabled)
+        logger.info("Skip synthesis: %s", skip_synthesis)
 
         current_date = {"date": now.strftime("%Y-%m-%d"), "day_name": now.strftime("%A")}
         week_dates = [
@@ -339,7 +351,7 @@ async def run_analysis_from_config(config_path: Path) -> None:
             for offset in range(14)
         ]
 
-        logger.info("Starte KI-Analyse und Planung...")
+        logger.info("Starting AI analysis and planning...")
 
         garmin_data_dict = asdict(garmin_data)
 
@@ -356,9 +368,10 @@ async def run_analysis_from_config(config_path: Path) -> None:
             hitl_enabled=hitl_enabled,
             skip_synthesis=skip_synthesis,
             run_type=run_type,
+            athlete_level=athlete_level,
         )
 
-        logger.info("Speichere Ergebnisse...")
+        logger.info("Saving results...")
 
         files_generated: list[str] = []
         files_generated.extend(_save_garmin_raw_data(output_dir, garmin_data_dict))
@@ -405,17 +418,17 @@ async def run_analysis_from_config(config_path: Path) -> None:
             encoding="utf-8"
         )
 
-        logger.info("✅ Analyse erfolgreich abgeschlossen!")
+        logger.info("✅ Analysis completed successfully!")
         if outside_competitions:
-            logger.info("✅  %d Outside-Wettkämpfe aus der Konfiguration hinzugefügt", len(outside_competitions))
-        logger.info("📁 Ergebnisse gespeichert in: %s", output_dir)
+            logger.info("✅  %d Outside competitions added from config", len(outside_competitions))
+        logger.info("📁 Results saved to: %s", output_dir)
         if cost_total is None:
             token_info = f" ({total_tokens} Tokens)" if isinstance(total_tokens, int) else ""
-            logger.info("💰 Gesamtkosten: nicht berechenbar%s", token_info)
+            logger.info("💰 Total cost: not calculable%s", token_info)
         else:
-            logger.info("💰 Gesamtkosten: $%.2f (%d Tokens)", cost_total, int(total_tokens or 0))
+            logger.info("💰 Total cost: $%.2f (%d tokens)", cost_total, int(total_tokens or 0))
     except Exception as e:
-        logger.error("❌ Analyse fehlgeschlagen: %s", e)
+        logger.error("❌ Analysis failed: %s", e)
         raise
 
 

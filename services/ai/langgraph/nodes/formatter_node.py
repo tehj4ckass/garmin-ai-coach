@@ -7,44 +7,59 @@ from services.ai.model_config import ModelSelector
 from services.ai.utils.retry_handler import AI_ANALYSIS_CONFIG, retry_with_backoff
 
 from .node_base import extract_usage_metadata
-from .prompt_components import format_valid_plot_catalog
+from .prompt_components import format_valid_plot_catalog, get_report_css
 from .tool_calling_helper import extract_text_content
 
 logger = logging.getLogger(__name__)
 
-FORMATTER_SYSTEM_PROMPT = """Du bist ein Design-Technologe.
+FORMATTER_SYSTEM_PROMPT = """Du bist ein Design-Technologe für sportliche Leistungsberichte.
 ## Ziel
-Erstelle ansprechende, funktionale HTML-Dokumente für sportliche Leistungsdaten.
+Erstelle ein vollständiges HTML-Dokument unter Verwendung des bereitgestellten CSS-Design-Systems.
 ## Prinzipien
-- Klarheit: Design für sofortiges Verständnis.
-- Hierarchie: Nutze visuelle Strukturen, um die Aufmerksamkeit zu lenken.
-- Ästhetik: Balance zwischen Schönheit und Funktion."""
+- Verwende AUSSCHLIESSLICH die CSS-Klassen aus dem bereitgestellten Stylesheet.
+- Erfinde KEIN eigenes CSS. Das Stylesheet wird als <style>-Block inline eingefügt.
+- Klarheit: Sofortiges Verständnis durch visuelle Hierarchie.
+- Vollständigkeit: ALLE Inhalte, Metriken und Scores müssen enthalten sein."""
 
-FORMATTER_USER_PROMPT_BASE = """Transformiere diesen Inhalt in ein schönes HTML-Dokument.
+FORMATTER_USER_PROMPT_BASE = """Transformiere den folgenden Analyse-Inhalt in ein HTML-Dokument.
 
 {plot_catalog}
 
-## Inhalt
+## Design-System CSS (PFLICHT — als <style>-Block in <head> einfügen)
+```css
+{report_css}
+```
+
+## Inhalt (Markdown → HTML umwandeln)
 ```markdown
 {synthesis_result}
 ```
 
-## Aufgabe
-Erstelle ein vollständiges HTML-Dokument mit:
-1. **Struktur**: Logische Organisation mit klaren Überschriften.
-2. **Design**: Sauberes CSS, responsives Layout, professionelle Typografie.
-3. **Visuelle Elemente**: Nutze Emojis und Farben, um Daten hervorzuheben (z. B. 🎯 Ziele, 📊 Metriken).
-4. **Vollständigkeit**: Füge ALLE Inhalte, Metriken und Scores ein.
-5. **Header**: Setze oben einen klaren Titel mit dem Athletennamen: "{athlete_name}" (keine erfundenen Namen).
+## Struktur-Anweisungen
+Verwende diese Klassen aus dem CSS:
+- `.report-container` — äußerer Wrapper (max-width 1100px)
+- `.report-header` mit `.subtitle` ("PERFORMANCE ANALYSIS"), `h1` (Athletenname: "{athlete_name}"), `.meta-row` mit `.meta-item` (Datum, AI-Mode, Level)
+- `.section` mit `.section-label` (nummeriert: `<span class="section-num">01</span> Overview`) und `.section-title`
+- `.card` mit `.card-header` → `.card-title` + `.tag` (tag-accent/tag-cyan/tag-amber/tag-rose/tag-blue)
+- `.grid .grid-2` / `.grid-3` / `.grid-4` für Spalten-Layouts
+- `.kpi` innerhalb von `.card` → `.kpi-value`, `.kpi-label`, `.kpi-delta.positive/.negative/.neutral`
+- `.data-table` mit `<th>` (Monospace-Header) und `<td>`
+- `.callout` / `.callout-warn` / `.callout-danger` / `.callout-info` für Alerts
+- `<ul>` / `<ol>` für Listen (Marker-Farbe ist automatisch accent)
+- `.report-footer` am Ende
+- Emojis in `.card-title` und `.section-label` als visuelle Marker
 
-## Ausgabe
-Gib NUR das vollständige HTML-Dokument zurück."""
+## Regeln
+1. Füge das CSS EXAKT so als `<style>`-Block im `<head>` ein. KEIN zusätzliches CSS.
+2. Die `@import`-Zeile für Google Fonts MUSS als erstes im `<style>`-Block stehen.
+3. Alle Metriken und Scores aus dem Markdown müssen enthalten sein.
+4. Gib NUR das vollständige HTML-Dokument zurück."""
 
 FORMATTER_PLOT_INSTRUCTIONS = """
 ## Diagramm-Integration
 - **Beibehalten**: Behalte `[PLOT:…]`-Referenzen EXAKT bei — **nur** die IDs aus dem Katalog oben (falls vorhanden). Keine neuen Namen erfinden.
-- **Layout**: Behandle sie als große visuelle Blöcke (volle Breite).
-- **Abstände**: Stelle sicher, dass das CSS vertikalen Platz (~500px) für die interaktiven Diagramme vorsieht, die sie ersetzen werden."""
+- **Layout**: Behandle sie als große visuelle Blöcke (volle Breite) innerhalb einer `.card`.
+- **Abstände**: Stelle sicher, dass die Card vertikalen Platz (~500px) für die interaktiven Diagramme vorsieht, die sie ersetzen werden."""
 
 
 async def formatter_node(state: TrainingAnalysisState) -> dict[str, list | str]:
@@ -74,6 +89,7 @@ async def formatter_node(state: TrainingAnalysisState) -> dict[str, list | str]:
                 {"role": "user", "content": (
                     FORMATTER_USER_PROMPT_BASE.format(
                         plot_catalog=plot_catalog,
+                        report_css=get_report_css(),
                         synthesis_result=synthesis_result,
                         athlete_name=state.get("athlete_name", "Athlete"),
                     )

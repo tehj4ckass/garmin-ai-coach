@@ -180,12 +180,16 @@ async def run_complete_analysis_and_planning(
     hitl_enabled: bool = True,
     skip_synthesis: bool = False,
     run_type: str | None = None,
+    athlete_level: str | None = None,
 ) -> dict:
     execution_id = f"{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_complete"
     cost_tracker = ProgressIntegratedCostTracker(f"garmin_ai_coach_{user_id}", progress_manager)
 
     resolved_run_type = (
         run_type if run_type is not None else get_config().run_type.value
+    )
+    resolved_athlete_level = (
+        athlete_level if athlete_level is not None else get_config().athlete_level.value
     )
 
     final_state, execution = await cost_tracker.run_workflow_with_progress(
@@ -204,6 +208,7 @@ async def run_complete_analysis_and_planning(
             hitl_enabled=hitl_enabled,
             skip_synthesis=skip_synthesis,
             run_type=resolved_run_type,
+            athlete_level=resolved_athlete_level,
         )),
         execution_id,
         user_id,

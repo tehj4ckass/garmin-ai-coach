@@ -1,4 +1,83 @@
+import functools
+import logging
+from pathlib import Path
 from typing import Any, Literal
+
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Athlete-Level Coaching Overlays
+# ---------------------------------------------------------------------------
+# Each overlay adjusts tone, detail depth, metric focus, and recommendation
+# style for all expert / planner / synthesis prompts.  Injected via
+# get_level_context() — one call per node, no prompt duplication.
+# ---------------------------------------------------------------------------
+
+LEVEL_OVERLAYS: dict[str, str] = {
+    "beginner": """
+## Athleten-Level: Beginner / Hobbysportler
+- **Tonfall**: Ermutigend, motivierend, einfache Sprache. Vermeide Fachjargon oder erkläre ihn sofort in einem kurzen Nebensatz.
+- **Analyse-Fokus**: Konsistenz und Regelmäßigkeit sind wichtiger als Optimierung. Positive Fortschritte hervorheben.
+- **Metriken**: Nur die wichtigsten KPIs (Dauer, Häufigkeit, subjektives Empfinden). ACWR/TSB/Monotonie nur erwähnen, wenn wirklich auffällig — dann allgemeinverständlich erklären (z. B. „Du hast letzte Woche deutlich mehr trainiert als üblich").
+- **Empfehlungen**: Einfach, konkret, maximal 3 Handlungsempfehlungen. Keine Mikrooptimierung. „Du könntest…" statt „Du musst…".
+- **Risiko-Bewertung**: Konservativ, aber nicht angstmachend. Überlastungssignale freundlich ansprechen.
+- **Planungsstil**: Flexible Vorschläge statt strikter Vorgaben. Spaß und Gesundheit priorisieren.
+""",
+    "advanced": """
+## Athleten-Level: Advanced Amateur
+- **Tonfall**: Sachlich-freundlich, coach-ähnlich. Fachbegriffe verwenden, aber nicht überfrachten.
+- **Analyse-Fokus**: Balance zwischen Muster-Erkennung und praktischer Umsetzbarkeit. Periodisierung berücksichtigen.
+- **Metriken**: Vollständige KPI-Analyse inklusive ACWR, Belastungstrends, HRV-Muster. Einordnung mit Kontext.
+- **Empfehlungen**: Strukturiert und begründet, mit Alternativen. Erklären warum, nicht nur was.
+- **Risiko-Bewertung**: Differenziert — zwischen „beobachten" und „handeln" unterscheiden.
+- **Planungsstil**: Klare Empfehlungen mit Spielraum für Anpassung. Progression und Erholung ausbalancieren.
+""",
+    "elite": """
+## Athleten-Level: Elite Athlete
+- **Tonfall**: Direkt, datengetrieben, ohne Beschönigung. Kritische Analyse erwünscht.
+- **Analyse-Fokus**: Maximale Detailtiefe. Subtile Muster, marginale Gewinne, Crash-Signaturen erkennen.
+- **Metriken**: Alle verfügbaren KPIs mit voller ACWR-/Monotonie-/Strain-Analyse. Schwellenwerte benennen und bewerten.
+- **Empfehlungen**: Präzise, evidenzbasiert, mit Risiko-Reward-Abwägung. Grenzbelastung diskutieren.
+- **Risiko-Bewertung**: Schonungslos ehrlich. Overreaching vs. Overtraining differenzieren.
+- **Planungsstil**: Detaillierte Vorgaben mit Zonen, Intensitäten, Progression. Kompromisslos am Ziel orientiert.
+""",
+}
+
+
+def get_level_context(level: str) -> str:
+    """Return the athlete-level coaching overlay for prompt injection.
+
+    Called by every expert / planner / synthesis node to calibrate the
+    LLM's tone, detail depth, and recommendation style.
+    """
+    return LEVEL_OVERLAYS.get(level, LEVEL_OVERLAYS["advanced"])
+
+
+# ---------------------------------------------------------------------------
+# Report Design System (CSS)
+# ---------------------------------------------------------------------------
+# Loaded once from docs/report_theme.css and cached.  Injected into the
+# formatter prompts so every generated report uses the same visual design.
+# ---------------------------------------------------------------------------
+
+_THEME_CSS_PATH = Path(__file__).resolve().parents[4] / "docs" / "report_theme.css"
+
+
+@functools.lru_cache(maxsize=1)
+def get_report_css() -> str:
+    """Return the shared report CSS stylesheet for HTML formatter prompts.
+
+    The CSS is read once from ``docs/report_theme.css`` and cached for the
+    lifetime of the process.  If the file is missing a warning is logged and
+    an empty string is returned so that the formatter still works (just
+    without a fixed design).
+    """
+    if _THEME_CSS_PATH.is_file():
+        css = _THEME_CSS_PATH.read_text(encoding="utf-8")
+        logger.debug("Loaded report theme CSS (%d chars) from %s", len(css), _THEME_CSS_PATH)
+        return css
+    logger.warning("Report theme CSS not found at %s — formatter will use its own styling", _THEME_CSS_PATH)
+    return ""
 
 AgentType = Literal[
     "metrics_summarizer",
