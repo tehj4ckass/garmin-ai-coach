@@ -1,0 +1,655 @@
+/* ============================================================
+   Garmin AI Coach — Chainlit Theme
+   Mirrors docs/report_theme.css design tokens so the Q&A UI
+   matches the generated analysis.html / planning.html reports.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ── 1. Design Tokens ────────────────────────────────────────── *
+   Same shape as docs/report_theme.css, but the chat UI uses a
+   slightly lifted background and a softer sage-lime accent — the
+   reports paint lime as small accents (KPI deltas, section nums),
+   while Chainlit fills entire message bubbles, so a less neon hue
+   reads better at scale.                                          */
+:root {
+  --bg-base:       #0d1117;
+  --bg-card:       #161b22;
+  --bg-card-hover: #1c232c;
+  --bg-elevated:   #20272f;
+  --bg-inset:      #11161d;
+
+  --border:        #1f2731;
+  --border-accent: #2d3a47;
+
+  --accent:        #a8d977;
+  --accent-dim:    rgba(168, 217, 119, 0.14);
+  --accent-glow:   rgba(168, 217, 119, 0.4);
+  --cyan:          #3ae8ff;
+  --cyan-dim:      rgba(58, 232, 255, 0.15);
+  --amber:         #ffb03a;
+  --rose:          #ff5a7e;
+
+  --text-primary:   #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted:     #6b7888;
+
+  --font-sans:    'Inter', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+  --font-heading: 'Geist', var(--font-sans);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+/* ── 2. shadcn-style Chainlit variables (HSL triplets) ───────── *
+   Chainlit v2 uses Tailwind/shadcn variables consumed as
+   `hsl(var(--background))` etc. We have to provide raw H S L
+   triplets — hex values won't be picked up here.
+   Apply under both :root and .dark to cover light/dark toggle.    */
+/* ── 2a. Dark (default) shadcn variables ─────────────────────── */
+:root,
+.dark,
+html.dark,
+[data-theme="dark"] {
+  --background:           215 28% 7%;     /* #0d1117 */
+  --foreground:           213 27% 93%;    /* #e6edf3 */
+
+  --card:                 215 21% 11%;    /* #161b22 */
+  --card-foreground:      213 27% 93%;
+  --popover:              215 21% 11%;
+  --popover-foreground:   213 27% 93%;
+
+  --primary:              85 56% 66%;     /* #a8d977 soft sage-lime */
+  --primary-foreground:   215 28% 9%;     /* dark text on lime */
+
+  --secondary:            215 21% 11%;
+  --secondary-foreground: 213 27% 93%;
+
+  --muted:                215 21% 11%;
+  --muted-foreground:     213 9% 58%;     /* #8b949e */
+
+  --accent:               85 56% 66%;
+  --accent-foreground:    215 28% 9%;
+
+  --destructive:          347 100% 68%;   /* #ff5a7e rose */
+  --destructive-foreground: 213 27% 93%;
+
+  --border:               214 23% 16%;    /* #1f2731 */
+  --input:                217 26% 9%;     /* #11161d */
+  --ring:                 85 56% 66%;
+
+  --radius: 0.625rem;
+}
+
+/* ── 2b. Light theme overrides ──────────────────────────────── *
+   Mirrors the dark palette in reverse — light surfaces, dark
+   text, slightly darker sage-lime accent for AA contrast on
+   white. Chainlit follows the Tailwind convention (toggles the
+   `.dark` class on <html>, no explicit `.light`), so we target
+   both: an explicit `.light` class AND the absence of `.dark`.    */
+html.light,
+.light,
+[data-theme="light"],
+html:not(.dark) {
+  /* design tokens used by report-style rules */
+  --bg-base:       #f7f8fa;
+  --bg-card:       #ffffff;
+  --bg-card-hover: #f0f2f6;
+  --bg-elevated:   #eef0f4;
+  --bg-inset:      #f0f2f6;
+
+  --border:        #d8dee5;
+  --border-accent: #b8c0cc;
+
+  --accent:        #6fab46;                       /* darker sage on white */
+  --accent-dim:    rgba(111, 171, 70, 0.14);
+  --accent-glow:   rgba(111, 171, 70, 0.32);
+  --cyan:          #1287a8;
+  --cyan-dim:      rgba(18, 135, 168, 0.12);
+  --amber:         #b8780f;
+  --rose:          #d63864;
+
+  --text-primary:   #0d1117;
+  --text-secondary: #4a525e;
+  --text-muted:     #6b7888;
+
+  /* shadcn HSL triplets — light counterparts */
+  --background:           220 17% 97%;    /* #f7f8fa */
+  --foreground:           215 28% 7%;     /* #0d1117 */
+
+  --card:                 0 0% 100%;      /* #ffffff */
+  --card-foreground:      215 28% 7%;
+  --popover:              0 0% 100%;
+  --popover-foreground:   215 28% 7%;
+
+  --primary:              101 42% 47%;    /* #6fab46 */
+  --primary-foreground:   0 0% 100%;      /* white text on sage */
+
+  --secondary:            220 14% 93%;
+  --secondary-foreground: 215 28% 7%;
+
+  --muted:                220 17% 95%;
+  --muted-foreground:     217 12% 47%;
+
+  --accent:               101 42% 47%;
+  --accent-foreground:    0 0% 100%;
+
+  --destructive:          340 65% 52%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border:               216 14% 87%;
+  --input:                225 17% 95%;
+  --ring:                 101 42% 47%;
+}
+
+/* ── 3. Base ─────────────────────────────────────────────────── */
+html {
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg-base) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-sans) !important;
+  line-height: 1.65;
+}
+
+#root,
+main {
+  background: var(--bg-base) !important;
+}
+
+/* Comfortable reading width on big screens */
+main .MuiBox-root,
+main [class*="container"] {
+  max-width: 52rem;
+}
+
+/* ── 4. Typography ───────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6,
+.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+  font-family: var(--font-heading) !important;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-primary) !important;
+}
+
+.markdown-body,
+.markdown-body p,
+.markdown-body li {
+  font-family: var(--font-sans) !important;
+  color: var(--text-primary) !important;
+  line-height: 1.65;
+}
+
+.markdown-body strong { color: var(--text-primary); font-weight: 600; }
+.markdown-body em     { color: var(--text-muted); font-style: italic; }
+
+a, .markdown-body a {
+  color: var(--cyan) !important;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+a:hover { opacity: 0.8; }
+
+/* ── 5. Code blocks ──────────────────────────────────────────── */
+code, .markdown-body code, .mono {
+  font-family: var(--font-mono) !important;
+  font-size: 0.88em;
+}
+
+/* Inline code — used in chat for filenames, mode tags, model
+   names. Chainlit renders these via shadcn utilities that default
+   to a light/muted fill, which collides with our dark theme. Force
+   a dark elevated pill with mono accent text everywhere.          */
+code,
+.markdown-body code:not(pre code),
+[class*="inline-code"],
+[class*="codeInline"] {
+  background: var(--bg-elevated) !important;
+  color: var(--accent) !important;
+  padding: 2px 8px !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid var(--border) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.85em !important;
+}
+
+.markdown-body pre,
+.markdown-body pre code {
+  background: var(--bg-inset) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  color: var(--text-primary) !important;
+}
+.markdown-body pre code {
+  padding: 0 !important;
+  border: none !important;
+  font-size: 0.85em;
+}
+
+/* ── 5c. Prose max-width release ─────────────────────────────── *
+   Chainlit wraps message content in Tailwind's `.prose` class,
+   which clamps text columns to ~65ch for readability. That makes
+   the message column visibly narrower than the composer card
+   below it (both share the same 60rem parent, but only one is
+   prose-constrained). Releasing the cap puts both on the same
+   horizontal axis. Tables, code blocks and lists already
+   self-constrain to readable widths via their own styles.        */
+.prose,
+.prose.lg\:prose-xl,
+[class*="prose"] {
+  max-width: none !important;
+}
+
+/* ── 5b. Tailwind utility background overrides ──────────────── *
+   Chainlit/shadcn ship with utility classes like bg-muted /
+   bg-secondary / bg-background that are sometimes baked into
+   components and don't react to our HSL var overrides reliably.
+   Force them onto our dark palette so badges, chips, and inline
+   pills don't surface as white-on-white.                         */
+.bg-muted, [class*="bg-muted"],
+.bg-secondary, [class*="bg-secondary"] {
+  background-color: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+}
+.bg-background, [class*="bg-background"] {
+  background-color: var(--bg-base) !important;
+  color: var(--text-primary) !important;
+}
+.bg-card, [class*="bg-card"] {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Destructive areas (the pink/magenta bar) — tone down from the
+   shadcn default and stay on-palette. The actual rose stays for
+   true errors, but as a subtle outlined card, not a full fill.    */
+.bg-destructive, [class*="bg-destructive"],
+[role="alert"][class*="destructive"] {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--rose) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── 6. Message / Step cards ─────────────────────────────────── */
+.step,
+[data-step],
+[class*="MessageContent"],
+[class*="message-content"] {
+  border-radius: var(--radius-lg) !important;
+  transition: border-color 0.2s;
+}
+
+/* Solid Tailwind bg-primary / bg-accent surfaces get a sage fill
+   from our --primary / --accent variables. Force dark/light text
+   so labels stay readable on the sage tone. We do NOT extend the
+   fill to the user-message step container — only the actual
+   bubble div (`<div class="bg-accent rounded-3xl">`) should be
+   colored, otherwise the whole row turns lime and pushes the
+   text into a narrow right column.                               */
+.bg-primary,
+[class*="bg-primary"] {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+/* User message bubble — ensure body text is dark on the sage fill
+   regardless of which `--accent-foreground` Chainlit computes.   */
+[data-step-type="user_message"] [class*="bg-accent"],
+[data-step-type="user_message"] [class*="bg-accent"] * {
+  color: #0d1117 !important;
+}
+
+/* ── 7. Tables (Markdown rendered) ───────────────────────────── */
+.markdown-body table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-size: 0.88rem;
+  margin: 1rem 0;
+}
+.markdown-body th {
+  font-family: var(--font-mono) !important;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted) !important;
+  background: var(--bg-inset) !important;
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.markdown-body td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(31, 39, 49, 0.5);
+  color: var(--text-secondary) !important;
+}
+
+/* ── 8. Lists ────────────────────────────────────────────────── */
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 24px;
+  color: var(--text-primary) !important;
+}
+.markdown-body li::marker {
+  color: var(--accent);
+}
+
+/* ── 9. Blockquotes / Callouts ───────────────────────────────── */
+.markdown-body blockquote {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-dim);
+  padding: 12px 20px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  margin: 16px 0;
+  color: var(--text-primary) !important;
+}
+
+/* ── 10. Horizontal rule ─────────────────────────────────────── */
+.markdown-body hr {
+  border: none;
+  height: 1px;
+  background: var(--border);
+  margin: 32px 0;
+}
+
+/* ── 11. Input box ───────────────────────────────────────────── */
+.MuiInputBase-root,
+textarea,
+input[type="text"] {
+  background-color: var(--bg-inset) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.55 !important;
+}
+
+/* The chat composer textarea — ~3 lines tall, comfortable padding,
+   vertical resize. Symmetric horizontal padding now that the send
+   button no longer floats inside the textarea.                    */
+#chat-input,
+textarea#chat-input,
+[id*="chat-input"] textarea,
+[class*="chat-input"] textarea,
+[class*="composer"] textarea,
+[class*="input-box"] textarea,
+form textarea {
+  min-height: 96px !important;
+  padding: 14px 18px !important;
+  font-size: 1rem !important;
+  line-height: 1.55 !important;
+  resize: vertical !important;
+  width: 100% !important;
+}
+
+/* Composer card — Chainlit centers both message column and
+   composer at `max-width: min(60rem, 100vw)` with `mx-auto p-4`,
+   so they align inherently. We leave the wrapper alone here.
+   The pixel-perfect fix lives in section 5c (`.prose` max-width)
+   below — Tailwind's prose class constrains message content to
+   ~65ch, which makes the inner text column visibly narrower than
+   the composer card. Releasing that constraint puts them back
+   on the same axis.                                              */
+
+.MuiInputBase-root.Mui-focused,
+textarea:focus,
+input[type="text"]:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 1px var(--accent), 0 0 16px var(--accent-dim) !important;
+  outline: none !important;
+}
+
+/* Placeholder readable but quiet */
+textarea::placeholder,
+input::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1;
+}
+
+/* ── 12. Buttons ─────────────────────────────────────────────── */
+.MuiButton-root,
+.MuiIconButton-root,
+button[class*="primary"] {
+  color: var(--accent) !important;
+  font-family: var(--font-sans) !important;
+}
+
+.MuiButton-contained,
+button[class*="contained"] {
+  background-color: var(--accent) !important;
+  color: var(--bg-base) !important;
+  font-weight: 600;
+  border-radius: var(--radius-md) !important;
+}
+.MuiButton-contained:hover,
+button[class*="contained"]:hover {
+  background-color: #8cc25c !important;
+  box-shadow: 0 0 16px var(--accent-glow) !important;
+}
+
+/* ── 12b. Composer bottom row + send button ─────────────────── *
+   Chainlit DOM:
+     #message-composer (flex flex-col)
+       ├ div.relative.w-full          ← textarea wrapper
+       └ div.flex.items-center.justify-between   ← bottom toolbar
+            ├ div (empty left spacer)
+            └ div (button group → button#chat-submit)
+   Keep the default justify-between layout (button stays on the
+   right via the empty left spacer), just add breathing room
+   between the textarea and the toolbar.                          */
+#message-composer > div:has(button#chat-submit) {
+  margin-top: 14px !important;
+}
+
+/* Send button — solid sage circle, strong shadow so it pops off
+   the page even before hover. Hardcoded hex values per theme
+   so the contrast is predictable regardless of which token
+   inheritance path wins.                                          */
+button#chat-submit {
+  background-color: #6fab46 !important;            /* light-mode sage */
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  box-shadow:
+    0 4px 10px rgba(15, 23, 42, 0.18),
+    0 0 0 1px rgba(111, 171, 70, 0.35) !important;
+  transition: background-color 0.15s, box-shadow 0.15s, transform 0.1s !important;
+}
+
+html.dark button#chat-submit,
+.dark button#chat-submit {
+  background-color: #a8d977 !important;            /* dark-mode soft lime */
+  color: #0d1117 !important;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(168, 217, 119, 0.4) !important;
+}
+
+button#chat-submit:hover {
+  background-color: #5e9237 !important;
+  box-shadow:
+    0 6px 16px rgba(15, 23, 42, 0.28),
+    0 0 0 1px rgba(111, 171, 70, 0.55),
+    0 0 18px rgba(111, 171, 70, 0.45) !important;
+  transform: translateY(-1px);
+}
+
+html.dark button#chat-submit:hover,
+.dark button#chat-submit:hover {
+  background-color: #b8e587 !important;
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(168, 217, 119, 0.55),
+    0 0 18px rgba(168, 217, 119, 0.45) !important;
+}
+
+button#chat-submit svg {
+  color: currentColor !important;
+  width: 22px !important;
+  height: 22px !important;
+}
+
+/* ── 12c. Hide assistant-message avatar dot ─────────────────── *
+   Chainlit prefixes each assistant message with a small pulsing
+   avatar dot (h-5 w-5) plus a 16px flex gap, which shifts the
+   entire message content ~36px to the right. The composer card
+   below has no avatar, so its left edge sits 36px to the LEFT
+   of the message column → the asymmetry you've been seeing.
+   Hiding the avatar (and collapsing the gap) puts the message
+   content's left edge back on the composer's axis.              */
+.ai-message {
+  gap: 0 !important;
+}
+.ai-message > span:first-child {
+  display: none !important;
+}
+
+button[type="submit"]:hover,
+button[aria-label*="send" i]:hover,
+button[aria-label*="senden" i]:hover {
+  background-color: #8cc25c !important;
+  box-shadow: 0 0 14px var(--accent-glow) !important;
+}
+
+button[type="submit"]:active,
+button[aria-label*="send" i]:active {
+  transform: translateY(1px);
+}
+
+button[type="submit"] svg,
+button[aria-label*="send" i] svg,
+button[aria-label*="senden" i] svg {
+  color: var(--bg-base) !important;
+  width: 18px;
+  height: 18px;
+}
+
+/* Disabled state (empty input) — fade out instead of dark gray */
+button[type="submit"]:disabled,
+button[aria-label*="send" i]:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+
+/* ── 13. Header / Sidebar / Chrome ───────────────────────────── */
+header,
+[class*="Header"],
+[class*="header"],
+nav,
+aside,
+[class*="Sidebar"],
+[class*="sidebar"] {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Muted helper text (e.g. timestamps, mode badges) */
+[class*="caption"],
+[class*="Caption"],
+small {
+  color: var(--text-muted) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+/* ── 14. Scrollbars ──────────────────────────────────────────── */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-sm);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--border-accent);
+}
+
+/* ── 15. Selection ───────────────────────────────────────────── */
+::selection {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* ── 16. Welcome / Chat header (mirrors .report-header) ──────── *
+   Chainlit 2 sanitises raw HTML in messages, so the welcome
+   header is emitted as pure markdown by qa_chainlit_app:
+       ###### subtitle      → <h6>
+       # athlete name       → <h1>
+       meta · meta · meta   → <p>  (with inline <code> chips)
+       ---                  → <hr>
+   We then re-style this exact sequence to look like the report
+   masthead. h6 is reserved for this purpose project-wide.         */
+
+.markdown-body h6 {
+  font-family: var(--font-mono) !important;
+  font-size: 0.78rem !important;
+  color: var(--text-muted) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  margin: 4px 0 10px !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* The h1 directly after an h6 is the masthead title — bigger,
+   bolder, tighter tracking than regular markdown h1s.             */
+.markdown-body h6 + h1 {
+  font-family: var(--font-heading) !important;
+  font-size: 2.4rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.1 !important;
+  color: var(--text-primary) !important;
+  margin: 0 0 18px !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* Meta row paragraph (📅 ... · 🤖 ... · 📊 ... · 🏅 ...) right
+   after the masthead title.                                       */
+.markdown-body h6 + h1 + p {
+  font-family: var(--font-mono) !important;
+  font-size: 0.82rem !important;
+  color: var(--text-muted) !important;
+  margin: 0 0 4px !important;
+  line-height: 1.9;
+}
+
+/* The <hr> following the meta line is the masthead divider —
+   align its spacing with the report header's border-bottom.       */
+.markdown-body h6 + h1 + p + hr {
+  margin: 14px 0 24px !important;
+  height: 1px;
+  border: none;
+  background: var(--border);
+}
+
+/* Strip card chrome from the message that contains the masthead
+   so it reads as a page-level header, not a chat bubble.          */
+.step:has(.markdown-body > h6:first-child),
+[data-step]:has(.markdown-body > h6:first-child),
+[class*="MessageContent"]:has(> .markdown-body > h6:first-child) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}

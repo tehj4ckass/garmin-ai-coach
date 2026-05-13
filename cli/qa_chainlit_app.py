@@ -8,8 +8,14 @@ import json
 import logging
 import os
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Any, NamedTuple
+
+MONTHS_DE = (
+    "Januar", "Februar", "März", "April", "Mai", "Juni",
+    "Juli", "August", "September", "Oktober", "November", "Dezember",
+)
 
 import chainlit as cl
 import yaml
@@ -227,6 +233,20 @@ def get_athlete_level_label() -> str:
     return get_config().athlete_level.value
 
 
+def _get_athlete_name() -> str:
+    cfg_path = Path(os.environ.get("COACH_CONFIG", str(DEFAULT_COACH_CONFIG))).expanduser().resolve()
+    if not cfg_path.exists():
+        return "Coach Chat"
+    doc = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+    name = ((doc.get("athlete") or {}).get("name") or "").strip()
+    return name or "Coach Chat"
+
+
+def _today_de() -> str:
+    now = datetime.now()
+    return f"{now.day}. {MONTHS_DE[now.month - 1]} {now.year}"
+
+
 def _build_qa_llm():
     """Synthesis model with optional output token cap for Q&A cost control."""
     base = ModelSelector.get_llm(AgentRole.SYNTHESIS)
@@ -391,23 +411,28 @@ async def on_chat_start() -> None:
     cl.user_session.set("context_pack", None)
     cl.user_session.set("chat_history", [])
 
+    athlete_name = _get_athlete_name()
+    level = get_athlete_level_label()
+    today = _today_de()
+    context_profile = _qa_context_profile_label()
+
     lines = [
-        "### Garmin AI Coach · Q&A",
+        "###### Garmin AI Coach · Q&A",
+        f"# {athlete_name}",
         "",
-        f"**AI_MODE:** `{mode}` · **Modell (Synthese):** `{model}` · **Level:** `{get_athlete_level_label()}`",
+        (
+            f"📅 Datum: {today} · 🤖 Mode: `{mode}` · 📊 Modell: `{model}` "
+            f"· 🏅 Level: `{level}` · 📥 Kontext: `{context_profile}` "
+            f"· ✂️ Limit: `~{QA_MAX_OUTPUT_TOKENS}t`"
+        ),
+        "",
+        "---",
+        "",
     ]
     if (os.environ.get("QA_AI_MODE") or "").strip():
         lines.append(
             "_(**QA_AI_MODE** ist gesetzt: günstigeres/explizites Chat-Tier unabhängig von `coach_config`.)_"
         )
-    lines.append(
-        f"_(Eingabe-Tokens/Kosten: Kontextprofil **`{_qa_context_profile_label()}`** — `QA_CONTEXT_PROFILE` "
-        "`balanced` (Standard) · `economy` · `full`.)_"
-    )
-    lines.append(
-        f"_(Antwortlänge: **~{QA_MAX_OUTPUT_TOKENS}** Output-Tokens cap — `QA_RESPONSE_BUDGET` short · medium · long · full "
-        "oder `QA_MAX_OUTPUT_TOKENS`.)_"
-    )
     lines.extend(
         [
             "",

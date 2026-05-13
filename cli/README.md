@@ -213,7 +213,7 @@ The CLI will set `AI_MODE` from your config’s `extraction.ai_mode` (see [`pyth
 
 Provider selection depends on AI mode mapping (cheap/fast → stronger; see [`services/ai/ai_settings.py`](../services/ai/ai_settings.py)):
   - `development` → `gemini-3-flash` (`GOOGLE_API_KEY`)
-  - `cost_effective` → `claude-3-haiku` (`ANTHROPIC_API_KEY`)
+  - `cost_effective` → `gpt-4o-mini` (`OPENAI_API_KEY`)
   - `standard` → `claude-4` (`ANTHROPIC_API_KEY`)
   - `gemini_pro` → `gemini-3.1-pro` (`GOOGLE_API_KEY`); legacy YAML value `pro` is normalized to this
   - `openai` → `gpt-4o` (`OPENAI_API_KEY`)
@@ -224,6 +224,6 @@ Model IDs and providers are declared in [`python.ModelSelector.CONFIGURATIONS`](
 
 Practical guidance:
 - **Gemini (Flash or Pro):** `GOOGLE_API_KEY` — `development` (Flash) or `gemini_pro` (Pro tier).
-- **Anthropic:** `ANTHROPIC_API_KEY` — `cost_effective` (Haiku) or `standard` (Claude 4).
-- **OpenAI:** `OPENAI_API_KEY` — `openai` (`gpt-4o`).
+- **Anthropic:** `ANTHROPIC_API_KEY` — `standard` (Claude 4).
+- **OpenAI:** `OPENAI_API_KEY` — `cost_effective` (`gpt-4o-mini`) or `openai` (`gpt-4o`).
 - If you want to route via **OpenRouter**, set `OPENROUTER_API_KEY` (this can also act as a fallback router when direct keys are missing for supported models).

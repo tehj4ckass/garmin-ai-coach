@@ -109,14 +109,14 @@ class ModelSelector:
         ),
         # Anthropic Models
         "claude-4": ModelConfiguration(
-            name="claude-sonnet-4-5-20250929",
+            name="claude-sonnet-4-6",
             base_url="https://api.anthropic.com",
-            openrouter_name="anthropic/claude-sonnet-4.5",
+            openrouter_name="anthropic/claude-sonnet-4.6",
         ),
         "claude-4-thinking": ModelConfiguration(
-            name="claude-sonnet-4-5-20250929",
+            name="claude-sonnet-4-6",
             base_url="https://api.anthropic.com",
-            openrouter_name="anthropic/claude-sonnet-4.5",
+            openrouter_name="anthropic/claude-sonnet-4.6",
         ),
         "claude-opus": ModelConfiguration(
             name="claude-opus-4-1-20250805",
@@ -127,11 +127,6 @@ class ModelSelector:
             name="claude-opus-4-1-20250805",
             base_url="https://api.anthropic.com",
             openrouter_name="anthropic/claude-opus-4.1",
-        ),
-        "claude-3-haiku": ModelConfiguration(
-            name="claude-3-haiku-20240307",
-            base_url="https://api.anthropic.com",
-            openrouter_name="anthropic/claude-3-haiku",
         ),
         # DeepSeek Models
         "deepseek-chat": ModelConfiguration(

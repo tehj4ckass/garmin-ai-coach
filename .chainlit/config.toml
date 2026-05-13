@@ -8,6 +8,8 @@ name = "Garmin AI Coach · Q&A"
 # dark reads well for long coaching answers
 default_theme = "dark"
 layout = "wide"
+custom_font = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+custom_css = "/public/theme.css"
 
 [meta]
 # shown in browser tab / UI where supported
