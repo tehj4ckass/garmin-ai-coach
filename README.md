@@ -101,9 +101,6 @@ Then launch **`pixi run qa-chat`**, pick that run folder, and keep the conversat
 *Deep physiological analysis: baseline profiling, crash signature detection, and current readiness assessment:*
 ![Physiology & Readiness](docs/screenshots/dashboard2.png)
 
-*Actionable recommendations grouped by domain (load, running, cycling, recovery):*
-![Actionable Recommendations](docs/screenshots/dashboard3.png)
-
 ### 📅 Training Plans
 
 *Macro-cycle season plan with race anchors, phase architecture, and periodization timeline:*
