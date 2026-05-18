@@ -345,12 +345,9 @@ class OutsideApiGraphQlClient:
             return None
         eid_raw = node.get("eventId")
         try:
-            eid = int(eid_raw)  # type: ignore[arg-type]
+            eid = int(str(eid_raw)) if eid_raw is not None else -1
         except Exception:
-            try:
-                eid = int(str(eid_raw))
-            except Exception:
-                eid = -1
+            eid = -1
 
         provider = categories_provider or (lambda event_id: self.get_event_categories(event_id))
 
