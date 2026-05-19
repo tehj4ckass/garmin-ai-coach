@@ -22,6 +22,8 @@ class _StubSettings:
         ("claude-4", "anthropic_api_key", "ChatAnthropic"),
         ("gpt-4o", "openai_api_key", "ChatOpenAI"),
         ("gemini-3-flash", "google_api_key", "ChatGoogleGenerativeAI"),
+        ("gemini-3.5-flash", "google_api_key", "ChatGoogleGenerativeAI"),
+        ("gemini-3.1-flash-lite", "google_api_key", "ChatGoogleGenerativeAI"),
         ("gemini-3.1-pro", "google_api_key", "ChatGoogleGenerativeAI"),
     ],
 )

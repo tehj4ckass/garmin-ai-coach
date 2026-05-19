@@ -146,6 +146,16 @@ class ModelSelector:
         "gemini-3-flash": ModelConfiguration(
             name="gemini-3-flash-preview", base_url="https://generativelanguage.googleapis.com"
         ),
+        "gemini-3.5-flash": ModelConfiguration(
+            name="gemini-3.5-flash",
+            base_url="https://generativelanguage.googleapis.com",
+            openrouter_name="google/gemini-3.5-flash",
+        ),
+        "gemini-3.1-flash-lite": ModelConfiguration(
+            name="gemini-3.1-flash-lite",
+            base_url="https://generativelanguage.googleapis.com",
+            openrouter_name="google/gemini-3.1-flash-lite",
+        ),
         "gemini-3.1-pro": ModelConfiguration(
             name="gemini-3.1-pro-preview", base_url="https://generativelanguage.googleapis.com"
         ),
@@ -221,6 +231,12 @@ class ModelSelector:
         },
         "gemini-3-flash": {
             "log": "Using Gemini 3 Flash for {role} (fast and capable)",
+        },
+        "gemini-3.5-flash": {
+            "log": "Using Gemini 3.5 Flash for {role} (fast and highly capable)",
+        },
+        "gemini-3.1-flash-lite": {
+            "log": "Using Gemini 3.1 Flash Lite for {role} (highly cost-efficient)",
         },
         "gemini-3.1-pro": {
             "log": "Using Gemini 3.1 Pro for {role} (advanced reasoning and planning)",
