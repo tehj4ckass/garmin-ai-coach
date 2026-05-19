@@ -128,6 +128,11 @@ class ModelSelector:
             base_url="https://api.anthropic.com",
             openrouter_name="anthropic/claude-opus-4.1",
         ),
+        "claude-opus-4.7": ModelConfiguration(
+            name="claude-opus-4-7",
+            base_url="https://api.anthropic.com",
+            openrouter_name="anthropic/claude-opus-4.7",
+        ),
         # DeepSeek Models
         "deepseek-chat": ModelConfiguration(
             name="openrouter/deepseek/deepseek-chat", base_url=OPENROUTER_BASE_URL
@@ -186,6 +191,10 @@ class ModelSelector:
         "claude-opus": {
             "max_tokens": 32000,
             "log": "Using extended output tokens for {role} (max_tokens: 32000)",
+        },
+        "claude-opus-4.7": {
+            "max_tokens": 64000,
+            "log": "Using Claude Opus 4.7 for {role} (max_tokens: 64000)",
         },
         "gpt-5": {
             "use_responses_api": True,

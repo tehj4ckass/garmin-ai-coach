@@ -290,7 +290,7 @@ async def run_analysis_from_config(config_path: Path) -> None:
     password = config_parser.get_password()
 
     _ai_raw = str(extraction_settings.get("ai_mode", "development")).strip().lower()
-    os.environ["AI_MODE"] = "gemini_pro" if _ai_raw == "pro" else _ai_raw
+    os.environ["AI_MODE"] = "pro" if _ai_raw == "gemini_pro" else _ai_raw
     os.environ["RUN_TYPE"] = extraction_settings["run_type"]
 
     athlete_level = config_parser.get_athlete_level()

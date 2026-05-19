@@ -190,14 +190,14 @@ def apply_coach_config_ai_mode() -> str:
         mode = (doc.get("extraction") or {}).get("ai_mode")
         if mode is not None:
             m = str(mode).strip().lower()
-            if m == "pro":
-                m = "gemini_pro"
+            if m == "gemini_pro":
+                m = "pro"
             os.environ["AI_MODE"] = m
     qa_override = (os.environ.get("QA_AI_MODE") or "").strip()
     if qa_override:
         m = qa_override.lower()
-        if m == "pro":
-            m = "gemini_pro"
+        if m == "gemini_pro":
+            m = "pro"
         os.environ["AI_MODE"] = m
     # Athlete level from coach_config.yaml or env override
     if cfg_path.exists():

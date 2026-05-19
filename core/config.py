@@ -20,7 +20,7 @@ class AIMode(Enum):
     DEVELOPMENT = "development"
     COST_EFFECTIVE = "cost_effective"
     STANDARD = "standard"
-    GEMINI_PRO = "gemini_pro"
+    PRO = "pro"
     OPENAI = "openai"
 
 
@@ -61,8 +61,8 @@ class Config:
 
         # Coach-CLI setzt AI_MODE vor reload_config() aus coach_config.yaml; .env ist optional (für andere Einstiege).
         ai_mode_str = os.getenv("AI_MODE", "standard").lower().strip()
-        if ai_mode_str == "pro":
-            ai_mode_str = "gemini_pro"
+        if ai_mode_str == "gemini_pro":
+            ai_mode_str = "pro"
         try:
             ai_mode = AIMode(ai_mode_str)
         except ValueError:

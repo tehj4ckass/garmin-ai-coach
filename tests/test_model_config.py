@@ -20,6 +20,7 @@ class _StubSettings:
     ("model_name", "api_key_field", "expected_client"),
     [
         ("claude-4", "anthropic_api_key", "ChatAnthropic"),
+        ("claude-opus-4.7", "anthropic_api_key", "ChatAnthropic"),
         ("gpt-4o", "openai_api_key", "ChatOpenAI"),
         ("gemini-3-flash", "google_api_key", "ChatGoogleGenerativeAI"),
         ("gemini-3.5-flash", "google_api_key", "ChatGoogleGenerativeAI"),
