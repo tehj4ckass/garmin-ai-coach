@@ -120,6 +120,43 @@ class TestExtractTextContent(unittest.TestCase):
 
         self.assertEqual(result, "Just a plain string")
 
+    def test_content_list_with_multiple_text_items(self):
+        mock_response = Mock(spec=["content"])
+        mock_response.content = [
+            {"type": "text", "text": "First "},
+            {"type": "text", "text": "Second"}
+        ]
+        # Current implementation of the list branch only returns the first match
+        result = extract_text_content(mock_response)
+        self.assertEqual(result, "First ")
+
+    def test_content_list_with_text_key_no_type(self):
+        mock_response = Mock(spec=["content"])
+        mock_response.content = [
+            {"text": "Text without type"}
+        ]
+        result = extract_text_content(mock_response)
+        self.assertEqual(result, "Text without type")
+
+    def test_content_is_dict(self):
+        mock_response = Mock(spec=["content"])
+        mock_response.content = {"key": "value"}
+        result = extract_text_content(mock_response)
+        # Should fall back to str(content)
+        self.assertEqual(result, str({"key": "value"}))
+
+    def test_response_no_attributes(self):
+        # response has neither content nor content_blocks
+        mock_response = Mock(spec=[])
+        result = extract_text_content(mock_response)
+        self.assertEqual(result, str(mock_response))
+
+    def test_content_list_with_non_dict_items(self):
+        mock_response = Mock(spec=["content"])
+        mock_response.content = ["string item", 123, {"text": "valid dict item"}]
+        result = extract_text_content(mock_response)
+        self.assertEqual(result, "valid dict item")
+
 
 if __name__ == "__main__":
     unittest.main()
