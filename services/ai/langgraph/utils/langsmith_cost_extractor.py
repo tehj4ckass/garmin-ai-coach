@@ -1,12 +1,12 @@
+import asyncio
 import logging
 import os
-import time
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
-from langsmith import Client
-from requests import HTTPError
+import httpx
+from langsmith import AsyncClient
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +42,12 @@ class LangSmithCostExtractor:
         self.client = None
         if os.getenv("LANGSMITH_API_KEY"):
             try:
-                self.client = Client()
+                self.client = AsyncClient()
                 logger.info("LangSmith cost extractor initialized")
             except Exception as exc:
                 logger.warning("Failed to initialize LangSmith client: %s", exc)
 
-    def safe_read_run(
+    async def safe_read_run(
         self, run_id: str, retries: int = 3, backoff: float = 0.5, load_children: bool = True
     ):
         if not self.client:
@@ -55,8 +55,8 @@ class LangSmithCostExtractor:
 
         for i in range(retries):
             try:
-                return self.client.read_run(run_id, load_child_runs=load_children)
-            except HTTPError as e:
+                return await self.client.read_run(run_id, load_child_runs=load_children)
+            except (httpx.HTTPStatusError, httpx.RequestError) as e:
                 logger.warning(
                     "HTTP error reading run %s, attempt %s/%s: %s",
                     run_id,
@@ -66,15 +66,15 @@ class LangSmithCostExtractor:
                 )
                 if i == retries - 1:
                     raise
-                time.sleep(backoff * (2**i))
+                await asyncio.sleep(backoff * (2**i))
             except Exception:
                 logger.exception("Unexpected error reading run %s", run_id)
                 if i == retries - 1:
                     raise
-                time.sleep(backoff)
+                await asyncio.sleep(backoff)
         return None
 
-    def extract_workflow_costs_by_trace(
+    async def extract_workflow_costs_by_trace(
         self, trace_id: str, execution_time: float = 0.0
     ) -> WorkflowCostSummary:
         if not self.client:
@@ -82,11 +82,12 @@ class LangSmithCostExtractor:
             return self._zero_workflow_summary(trace_id)
 
         try:
-            all_runs = list(
-                self.client.list_runs(
-                    trace=trace_id, select=["id", "name", "run_type", "total_cost", "total_tokens"]
-                )
-            )
+            all_runs = []
+            async for run in self.client.list_runs(
+                trace=trace_id, select=["id", "name", "run_type", "total_cost", "total_tokens"]
+            ):
+                all_runs.append(run)
+
             logger.info("Found %s total runs for trace %s", len(all_runs), trace_id)
             for run in all_runs[:5]:  # Log first 5 for debugging
                 run_cost = float(run.total_cost or 0)
@@ -97,21 +98,22 @@ class LangSmithCostExtractor:
                     run_cost,
                 )
 
-            llm_runs = list(
-                self.client.list_runs(
-                    trace=trace_id,
-                    filter='eq(run_type, "llm")',
-                    select=[
-                        "id",
-                        "name",
-                        "total_cost",
-                        "total_tokens",
-                        "prompt_tokens",
-                        "completion_tokens",
-                        "serialized",
-                    ],
-                )
-            )
+            llm_runs = []
+            async for run in self.client.list_runs(
+                trace=trace_id,
+                filter='eq(run_type, "llm")',
+                select=[
+                    "id",
+                    "name",
+                    "total_cost",
+                    "total_tokens",
+                    "prompt_tokens",
+                    "completion_tokens",
+                    "serialized",
+                ],
+            ):
+                llm_runs.append(run)
+
             logger.info("Found %s LLM runs for trace %s", len(llm_runs), trace_id)
 
             total_cost = Decimal("0")
@@ -174,13 +176,13 @@ class LangSmithCostExtractor:
             logger.exception("Failed to extract workflow costs for trace %s", trace_id)
             return self._zero_workflow_summary(trace_id)
 
-    def extract_run_costs(self, run_id: str) -> dict[str, Any]:
+    async def extract_run_costs(self, run_id: str) -> dict[str, Any]:
         try:
-            root_run = self.safe_read_run(run_id, load_children=True)
+            root_run = await self.safe_read_run(run_id, load_children=True)
             if not root_run:
                 return self._zero_cost_summary(run_id)
 
-            workflow_summary = self.extract_workflow_costs_by_trace(str(root_run.trace_id))
+            workflow_summary = await self.extract_workflow_costs_by_trace(str(root_run.trace_id))
             workflow_summary.root_run_id = run_id
 
             model_breakdown = {}

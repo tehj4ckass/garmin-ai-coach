@@ -125,10 +125,13 @@ class TestWorkflowCostTracker:
 
 class TestLangSmithCostExtractorFallback:
 
-    def test_extract_workflow_costs_no_client(self):
+    @pytest.mark.asyncio
+    async def test_extract_workflow_costs_no_client(self):
         import os
 
-        from services.ai.langgraph.utils.langsmith_cost_extractor import LangSmithCostExtractor
+        from services.ai.langgraph.utils.langsmith_cost_extractor import (
+            LangSmithCostExtractor,
+        )
 
         original_key = os.environ.get("LANGSMITH_API_KEY")
         if "LANGSMITH_API_KEY" in os.environ:
@@ -136,7 +139,7 @@ class TestLangSmithCostExtractorFallback:
 
         try:
             extractor = LangSmithCostExtractor()
-            result = extractor.extract_workflow_costs_by_trace("test_trace")
+            result = await extractor.extract_workflow_costs_by_trace("test_trace")
 
             assert result.total_cost_usd == 0.0
             assert result.total_tokens == 0

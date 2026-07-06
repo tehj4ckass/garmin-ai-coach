@@ -96,7 +96,7 @@ class WorkflowCostTracker:
 
             try:
                 logger.info("Extracting costs for deterministic trace: %s", execution.trace_id)
-                cost_summary = self.cost_extractor.extract_workflow_costs_by_trace(
+                cost_summary = await self.cost_extractor.extract_workflow_costs_by_trace(
                     execution.trace_id, execution.execution_time_seconds
                 )
                 cost_summary.root_run_id = execution.root_run_id
